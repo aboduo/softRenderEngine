@@ -112,8 +112,7 @@ bool Widget::init()
 
 void Widget::onEnter()
 {
-    if(needUpdate)
-        updateSizeAndPosition();
+    updateSizeAndPosition();
     CCNode::onEnter();
 }
 
@@ -437,6 +436,9 @@ void Widget::setSizePercent(const CCPoint &percent)
 
 void Widget::updateSizeAndPosition()
 {
+    if(!needUpdate)
+        return;
+
     Widget* widgetParent = getWidgetParent();
     CCSize pSize;
     if (widgetParent)

@@ -19,6 +19,9 @@ class CCNode : public CCObject
     void    setVertexZ(float var);
     float   getRotation();
     void    setRotation(float newRotation);
+    void    setRotationX(float newRotation);
+    void    setRotationY(float newRotation);
+
     float   getScale();
     void    setScale(float scale);
     float   getScaleX();
