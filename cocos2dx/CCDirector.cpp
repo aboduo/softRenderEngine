@@ -641,7 +641,7 @@ void CCDirector::popSceneWithTransition(float d) {
     else
     {
         m_bSendCleanupToScene = true;
-        CCScene *sn = CCTransitionFade::create(d, m_pobScenesStack->objectAtIndex(c-1));
+        CCScene *sn = CCTransitionFade::create(d, (CCScene*)(m_pobScenesStack->objectAtIndex(c-1)));
         m_pobScenesStack->replaceObjectAtIndex(c-1, sn);
         //m_pNextScene = (CCScene*)m_pobScenesStack->objectAtIndex(c - 1);
         m_pNextScene = sn;
