@@ -27,8 +27,10 @@ THE SOFTWARE.
 #include <vector>
 #include <string>
 
-#include "HelloWorldScene.h"
+//#include "HelloWorldScene.h"
 #include "AppMacros.h"
+#include "SoftView.h"
+
 
 USING_NS_CC;
 using namespace std;
@@ -49,13 +51,18 @@ bool AppDelegate::applicationDidFinishLaunching() {
     pDirector->setOpenGLView(pEGLView);
 	CCSize frameSize = pEGLView->getFrameSize();
 
+    CCSize vs = CCDirector::sharedDirector()->getVisibleSize();
     // Set the design resolution
+
+/*
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WINRT) || (CC_TARGET_PLATFORM == CC_PLATFORM_WP8)
     pEGLView->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, kResolutionShowAll);
 #else
     pEGLView->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, kResolutionNoBorder);
 #endif
-
+*/
+    pEGLView->setDesignResolutionSize(vs.width, vs.height, kResolutionNoBorder);
+    pDirector->setContentScaleFactor(1);
     
     vector<string> searchPath;
 
@@ -65,6 +72,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // this can make sure that the resource's height could fit for the height of design resolution.
 
     // if the frame's height is larger than the height of medium resource size, select large resource.
+    /*
 	if (frameSize.height > mediumResource.size.height)
 	{
         searchPath.push_back(largeResource.directory);
@@ -85,10 +93,10 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
         pDirector->setContentScaleFactor(MIN(smallResource.size.height/designResolutionSize.height, smallResource.size.width/designResolutionSize.width));
     }
-
+    */
 
     // set searching path
-    CCFileUtils::sharedFileUtils()->setSearchPaths(searchPath);
+    //CCFileUtils::sharedFileUtils()->setSearchPaths(searchPath);
 	
     // turn on display FPS
     pDirector->setDisplayStats(true);
@@ -97,7 +105,9 @@ bool AppDelegate::applicationDidFinishLaunching() {
     pDirector->setAnimationInterval(1.0 / 60);
 
     // create a scene. it's an autorelease object
-    CCScene *pScene = HelloWorld::scene();
+    //CCScene *pScene = HelloWorld::scene();
+    CCScene *pScene = SoftView::scene();
+
 
     // run
     pDirector->runWithScene(pScene);
