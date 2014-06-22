@@ -8,6 +8,7 @@ SOURCES = main.cpp \
 		../Classes/SoftView.cpp \
 		../Classes/Mesh.cpp \
 		../Classes/Camera.cpp \
+		../Classes/util.cpp \
         
 		
 		
