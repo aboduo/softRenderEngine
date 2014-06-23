@@ -4,6 +4,7 @@
 #include "kazmath/quaternion.h"
 #include <vector>
 
+
 //画线 drawLine 等粗细 没有远近
 struct Edge {
     int a;
@@ -39,6 +40,9 @@ public:
     passTime(0)
     {
     }
+
+    void loadFile(const char* fn);
+
 };
 
 #endif

@@ -18,6 +18,23 @@ public:
     void renderFace(CCSprite *, Mesh *m, unsigned char *data, float diff);
 
     void update(float diff);
+
+    Camera(int w, int h):
+    width(w),
+    height(h)
+    {
+        depth = (float*)malloc(width*height*sizeof(float));
+        memset(depth, 0, width*height*sizeof(float));
+    }
+
+    ~Camera() {
+        free(depth);
+    }
+private:
+    //深度缓冲区
+    float *depth;
+    int width;
+    int height;
 };
 
 #endif

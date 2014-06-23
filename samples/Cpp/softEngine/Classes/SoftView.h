@@ -14,9 +14,9 @@ public:
     virtual void update(float);
 
 private:
-    CCSprite *sp;
+    CCSprite *sp, *sp1;
     CCTexture2D *tex;
-    unsigned char *data;
+    unsigned char *data, *data1;
 
     int width;
     int height;
@@ -24,5 +24,7 @@ private:
 
     Mesh *m;
     Camera *cam;
+
+    bool renderYet;
 };
 #endif

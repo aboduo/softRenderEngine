@@ -24,7 +24,7 @@ void Camera::update(float diff) {
 
 
 void Camera::renderFace(CCSprite *sp, Mesh *m, unsigned char *data, float diff) {
-    m->update(diff);
+   // m->update(diff);
 
     CCSize tsz = sp->getContentSize(); 
     //投影每个mesh的顶点 计算2d 空间坐标
@@ -99,6 +99,8 @@ void Camera::renderFace(CCSprite *sp, Mesh *m, unsigned char *data, float diff) 
 
 
     memset(data, 0, (tsz.width*tsz.height*4));
+    memset(depth, 0, width*height*sizeof(float));
+
     //clear buffer
     CCLog("start %f %f", tsz.width, tsz.height);
     //数据的Y 方向似乎不对
@@ -133,18 +135,23 @@ void Camera::renderFace(CCSprite *sp, Mesh *m, unsigned char *data, float diff) 
         CCLog("aa %d %d %d", a, b, c);
         float apx = npos[a].x;
         float apy = npos[a].y;
+        float apz = npos[a].z;
         float aw = npos[a].w;
 
         float bpx = npos[b].x;
         float bpy = npos[b].y;
+        float bpz = npos[b].z;
         float bw = npos[b].w;
         
         float cpx = npos[c].x;
         float cpy = npos[c].y;
+        float cpz = npos[c].z;
         float cw = npos[c].w;
     
         CCLog("a b c %f %f %f  %f %f %f  %f %f %f", apx, apy, aw, bpx, bpy, bw, cpx, cpy, cw);
-        drawTriangle(data, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, apy/aw*tsz.height/2+cy, bpx/bw*tsz.width/2+cx, bpy/bw*tsz.height/2+cy,  cpx/cw*tsz.width/2+cx, cpy/cw*tsz.height/2+cy);
+        //根据 zbuffer数据 更新depth数据
+        //drawTriangle(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, tsz.height-(apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, tsz.height-(bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, tsz.height-(cpy/cw*tsz.height/2+cy), cpz/cw, i);
+        drawTriangle(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, i);
     }
 
 
@@ -167,7 +174,7 @@ void Camera::renderFace(CCSprite *sp, Mesh *m, unsigned char *data, float diff) 
 }
 
 void Camera::renderLine(CCSprite *sp, Mesh *m, unsigned char *data, float diff) {
-    m->update(diff);
+    //m->update(diff);
 
     CCSize tsz = sp->getContentSize(); 
     //投影每个mesh的顶点 计算2d 空间坐标
@@ -263,32 +270,9 @@ void Camera::renderLine(CCSprite *sp, Mesh *m, unsigned char *data, float diff) 
 
         CCLog("axy bxy %f %f %f %f %f %f", apx, apy, aw, bpx, bpy, bw);
         //根据角度绘制x y 方向角度绘制线
-        drawLine(data, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, apy/aw*tsz.height/2+cy, bpx/bw*tsz.width/2+cx, bpy/bw*tsz.height/2+cy, 1);
+        drawLine(data, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, apy/aw*tsz.height/2+cy, bpx/bw*tsz.width/2+cx, bpy/bw*tsz.height/2+cy, i);
     }
 
-
-
-    /*
-    for(int i=0; i < npos.size(); i++) {
-        CCLog("over pos %f %f %f %f", npos[i].x, npos[i].y, npos[i].z, npos[i].w);
-
-        float px = npos[i].x;
-        float py = npos[i].y;
-        float w = npos[i].w;
-
-        //缩放一下尺寸
-        int vx = std::min(std::max(0.0f, (px/w*tsz.width/2+cx)), tsz.width-1.0f);
-        //Y 方向反转一下
-        int vy = std::min(std::max(0.0f, (py/w*tsz.height/2+cy)), tsz.height-1.0f);
-        
-        CCLog("vx vy %d %d", vx, vy);
-        
-        data[int(vy*tsz.width+vx)*4+0] = 255; 
-        data[int(vy*tsz.width+vx)*4+1] = 255; 
-        data[int(vy*tsz.width+vx)*4+2] = 255; 
-        data[int(vy*tsz.width+vx)*4+3] = 255; 
-    }
-    */
 
 
     CCLog("end");
@@ -310,7 +294,7 @@ void Camera::renderLine(CCSprite *sp, Mesh *m, unsigned char *data, float diff) 
 
 
 void Camera::render(CCSprite *sp, Mesh *m, unsigned char *data, float diff) {
-    m->update(diff);
+    //m->update(diff);
 
     CCSize tsz = sp->getContentSize(); 
     //投影每个mesh的顶点 计算2d 空间坐标
@@ -364,6 +348,7 @@ void Camera::render(CCSprite *sp, Mesh *m, unsigned char *data, float diff) {
 
     //Model matrix
     for(int i=0;i < m->vertices.size(); i++) {
+    //for(int i=0;i < 1; i++) {
         kmVec4 out;
         kmVec4 temp;
         kmVec3 vt = m->vertices[i];
@@ -393,6 +378,7 @@ void Camera::render(CCSprite *sp, Mesh *m, unsigned char *data, float diff) {
     //旋转X 方向 反了 为什么呢?
     for(int i=0; i < npos.size(); i++) {
         CCLog("over pos %f %f %f %f", npos[i].x, npos[i].y, npos[i].z, npos[i].w);
+        CCLog("depth %f", npos[i].z/npos[i].w);
 
         float px = npos[i].x;
         float py = npos[i].y;

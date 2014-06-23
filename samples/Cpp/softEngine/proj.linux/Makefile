@@ -1,7 +1,7 @@
 DEBUG = 1
 EXECUTABLE = HelloCpp
 
-INCLUDES = -I.. -I../Classes
+INCLUDES = -I.. -I../Classes -I../../../../extensions/CocoStudio/Json
 
 SOURCES = main.cpp \
         ../Classes/AppDelegate.cpp \
