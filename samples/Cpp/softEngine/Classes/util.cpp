@@ -47,11 +47,13 @@ void putpixel(unsigned char *data, int width , int height, int x, int y, int col
     data[id*4+3] = 255;
 }
 
-void swap(int *a, int *b) {
-    int temp = *a;
+template <typename T>
+void swap(T *a, T *b) {
+    T temp = *a;
     *a = *b;
     *b = temp;
 }
+
 
 //扫描线fill 算法
 void drawTriangle(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, int x2, int y2, float z2, int x3, int y3, float z3, int col){
@@ -240,4 +242,107 @@ void drawLine(unsigned char *data, int width, int height, int x1, int y1, int x2
       putpixel(data, width, height, x, y, col);
     }
   }
+}
+
+float clamp(float value, float min=0, float max=1) {
+    return std::max(min, std::min(max, value));
+}
+
+float interpolate(float min, float max, float gradient) {
+    return min+(max-min)*clamp(gradient);
+}
+
+//void putpixel(unsigned char *data, int width , int height, int x, int y, int col) {
+void processScanLine(unsigned char *data, float *depth, int width, int height, int y, kmVec3 pa, kmVec3 pb, kmVec3 pc, kmVec3 pd, int col) {
+    float gradient1 = pa.y != pb.y ? (y-pa.y)/(pb.y-pa.y) : 1;
+    float gradient2 = pc.y != pd.y? (y-pc.y)/(pd.y-pc.y) : 1;
+    
+    int sx = (int)interpolate(pa.x, pb.x, gradient1);
+    int st = (int)interpolate(pc.x, pd.x, gradient2);
+    
+    float zx = interpolate(pa.z, pb.z, gradient1);
+    float ze = interpolate(pc.z, pd.z, gradient2);
+    //float deltaZ = (ze-zx)/(st-sx);
+
+    for(int x=sx; x < st; x++) {
+        float gradientZ = (float)(x-sx)/(st-sx);
+        float newDepth = interpolate(zx, ze, gradientZ);
+        float oldDepth = depth[y*width+x];
+        if(oldDepth == 0 || newDepth < oldDepth) {
+            depth[y*width+x] = newDepth;
+            putpixel(data, width, height, x, y, col);
+        }
+    }
+}
+
+
+void drawFace(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, int x2, int y2, float z2,  int x3, int y3, float z3,  int col) {
+    CCLog("drawFace %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
+
+    //忘记交换z 值 导致depth 错乱了
+    if(y1 > y2) {
+        swap(&x1, &x2);
+        swap(&y1, &y2);
+        swap(&z1, &z2);
+    }
+    if(y2 > y3) {
+        swap(&x2, &x3);
+        swap(&y2, &y3);
+        swap(&z2, &z3);
+    }
+    if(y1 > y2) {
+        swap(&x1, &x2);
+        swap(&y1, &y2);
+        swap(&z1, &z2);
+    }
+    
+    CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
+    
+    float dP1P2 = 0;
+    float dP1P3 = 0;
+    bool right = false;
+    bool left = false;
+
+    //y2 -y1 == 0 bug
+    if(y2 - y1 > 0) {
+        dP1P2 = (x2-x1)*1.0f/(y2-y1);
+    //无穷大
+    }else if(x2 > x1){
+        right = true;
+    //无穷小
+    }else {
+        left = true;
+    }
+    
+    if(y3-y1 > 0) {
+        dP1P3 = (x3-x1)*1.0f/(y3-y1);
+    }else {
+        dP1P3 = 0;
+    }
+    
+    CCLog("dp1p2 %f %f", dP1P2, dP1P3);
+
+    kmVec3 p1 = {x1, y1, z1};
+    kmVec3 p2 = {x2, y2, z2};
+    kmVec3 p3 = {x3, y3, z3};
+    
+
+    if(right || (!left && dP1P2 > dP1P3)) {
+        for(int y=y1; y <= y3; y++) {
+            if(y < y2) {
+                processScanLine(data, depth, width, height, y, p1, p3, p1, p2, col);
+            }else {
+                processScanLine(data, depth, width, height, y, p1, p3, p2, p3, col);
+            }
+        }
+    } else {
+        //p2 on left
+        for(int y=y1; y <= y3; y++) {
+            if(y < y2) {
+                processScanLine(data, depth, width, height, y, p1, p2, p1, p3, col);
+            }else {
+                processScanLine(data, depth, width, height, y, p2, p3, p1, p3, col);
+            }
+        }
+    }
 }

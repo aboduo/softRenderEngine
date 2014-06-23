@@ -13,7 +13,15 @@ public:
 
     virtual void update(float);
 
+
+    virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);
+    /*
+    virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
+    */
 private:
+    bool stop;
     CCSprite *sp, *sp1;
     CCTexture2D *tex;
     unsigned char *data, *data1;

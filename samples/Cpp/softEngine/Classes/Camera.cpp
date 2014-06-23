@@ -24,7 +24,7 @@ void Camera::update(float diff) {
 
 
 void Camera::renderFace(CCSprite *sp, Mesh *m, unsigned char *data, float diff) {
-   // m->update(diff);
+    m->update(diff);
 
     CCSize tsz = sp->getContentSize(); 
     //投影每个mesh的顶点 计算2d 空间坐标
@@ -151,7 +151,8 @@ void Camera::renderFace(CCSprite *sp, Mesh *m, unsigned char *data, float diff) 
         CCLog("a b c %f %f %f  %f %f %f  %f %f %f", apx, apy, aw, bpx, bpy, bw, cpx, cpy, cw);
         //根据 zbuffer数据 更新depth数据
         //drawTriangle(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, tsz.height-(apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, tsz.height-(bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, tsz.height-(cpy/cw*tsz.height/2+cy), cpz/cw, i);
-        drawTriangle(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, i);
+        //drawTriangle(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, i);
+        drawFace(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, i);
     }
 
 

@@ -13,6 +13,8 @@ bool SoftView::init(){
     {
         return false;
     }
+    stop = false;
+
     renderYet = false;
 
     m = new Mesh();
@@ -116,7 +118,13 @@ bool SoftView::init(){
 
     //update 的时候替换 sprite的纹理
     scheduleUpdate();
+    setTouchEnabled(true);
+    setTouchMode(kCCTouchesOneByOne);
 
+    return true;
+}
+bool SoftView::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent){
+    stop = !stop;
     return true;
 }
 
@@ -131,11 +139,13 @@ void SoftView::update(float v){
     
     //cam->renderLine(sp, m, data, v); 
     
+    if(!stop) {
+        cam->renderLine(sp1, m, data1, v); 
+        cam->renderFace(sp, m, data, v);
+    }
     if(!renderYet) {
         renderYet = true;
-        cam->renderFace(sp, m, data, v);
 
-        cam->renderLine(sp1, m, data1, v); 
         
         //cam->render(sp, m, data, v); 
     }

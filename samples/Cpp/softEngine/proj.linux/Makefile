@@ -1,5 +1,6 @@
 DEBUG = 1
 EXECUTABLE = HelloCpp
+CXXFLAGS += -Wno-c++11-narrowing
 
 INCLUDES = -I.. -I../Classes -I../../../../extensions/CocoStudio/Json
 
