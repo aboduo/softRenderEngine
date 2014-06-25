@@ -23,24 +23,44 @@ void Mesh::loadFile(const char *fn) {
     int len = meshes["vertices"].Size();
     float x, y, z;
 
+    float nx, ny, nz;
+    float tx, ty;
+
     //跳过normal 数据
+    int modV = 8;
     for(int i=0; i < len; i++) {
         float fv = meshes["vertices"][i].GetDouble();
-        if(i % 6 == 0) {
+        if(i % modV == 0) {
             x = fv;
-        }else if(i % 6 == 1) {
+        }else if(i % modV == 1) {
             y = fv;
-        } else if(i % 6 == 2) {
+        } else if(i % modV == 2) {
             z = fv;
             vertices.push_back({x, y, z});
+        } else if(i % modV == 3) {
+            nx = fv;
+        } else if(i % modV == 4) {
+            ny = fv;
+        } else if(i % modV == 5) {
+            nz = fv;
+            normal.push_back({nx, ny, nz});
+        } else if(i % modV == 6 ) {
+            tx = fv;
+        } else if(i % modV == 7) {
+            ty = fv;
+            textureCoord.push_back({tx, ty});
         }
     }
+
 
     /*
     triangles.push_back({0, 7, 3});
     //triangles.push_back({0, 2, 1});
     //triangles.push_back({0, 1, 7});
     triangles.push_back({3, 7, 4});
+
+    triangles.push_back({0, 3, 2});
+    triangles.push_back({3, 5, 2});
 
     edges.push_back({0, 7});
     edges.push_back({7, 3});
@@ -71,6 +91,7 @@ void Mesh::loadFile(const char *fn) {
         }
     }
     CCLog("vnum %d %d %d %d", len, len/3, len2, len2/3);
+
 }
 
 

@@ -276,6 +276,7 @@ void processScanLine(unsigned char *data, float *depth, int width, int height, i
 }
 
 
+
 void drawFace(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, int x2, int y2, float z2,  int x3, int y3, float z3,  int col) {
     CCLog("drawFace %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
 
@@ -346,3 +347,122 @@ void drawFace(unsigned char *data, float *depth, int width, int height, int x1, 
         }
     }
 }
+
+void putpixelWithLight(unsigned char *data, int width , int height, int x, int y, float col) {
+    x = std::max(std::min(width-1, x), 0);
+    y = std::max(std::min(height-1, y), 0);
+    int id = y*width+x;
+    unsigned int r, g, b;
+    //加一些环境光照
+    r = g = b = 255*col+5;
+
+    data[id*4+0] = r;
+    data[id*4+1] = g;
+    data[id*4+2] = b;
+    data[id*4+3] = 255;
+}
+
+
+void processScanLineWithLight(unsigned char *data, float *depth, int width, int height, int y, kmVec3 pa, kmVec3 ca, kmVec3 pb, kmVec3 cb, kmVec3 pc, kmVec3 cc,  kmVec3 pd, kmVec3 cd) {
+    float gradient1 = pa.y != pb.y ? (y-pa.y)/(pb.y-pa.y) : 1;
+    float gradient2 = pc.y != pd.y? (y-pc.y)/(pd.y-pc.y) : 1;
+    
+    int sx = (int)interpolate(pa.x, pb.x, gradient1);
+    int st = (int)interpolate(pc.x, pd.x, gradient2);
+    
+    float zx = interpolate(pa.z, pb.z, gradient1);
+    float ze = interpolate(pc.z, pd.z, gradient2);
+    //float deltaZ = (ze-zx)/(st-sx);
+
+    float lightS = interpolate(ca.x, cb.x, gradient1);
+    float lightE = interpolate(cc.x, cd.x, gradient2);
+
+    for(int x=sx; x < st; x++) {
+        float gradientZ = (float)(x-sx)/(st-sx);
+        float newDepth = interpolate(zx, ze, gradientZ);
+        float oldDepth = depth[y*width+x];
+        if(oldDepth == 0 || newDepth < oldDepth) {
+            depth[y*width+x] = newDepth;
+
+            float light = interpolate(lightS, lightE, gradientZ);
+            putpixelWithLight(data, width, height, x, y, light);
+        }
+    }
+}
+
+void drawFaceWithLight(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, kmVec3 col1, int x2, int y2, float z2, kmVec3 col2,  int x3, int y3, float z3,  kmVec3 col3){
+    CCLog("drawFace %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
+    CCLog("color %f %f %f", col1.x, col2.x, col3.x);
+
+    //忘记交换z 值 导致depth 错乱了
+    if(y1 > y2) {
+        swap(&x1, &x2);
+        swap(&y1, &y2);
+        swap(&z1, &z2);
+        swap(&col1, &col2);
+    }
+    if(y2 > y3) {
+        swap(&x2, &x3);
+        swap(&y2, &y3);
+        swap(&z2, &z3);
+        swap(&col2, &col3);
+    }
+
+    if(y1 > y2) {
+        swap(&x1, &x2);
+        swap(&y1, &y2);
+        swap(&z1, &z2);
+        swap(&col1, &col2);
+    }
+    
+    CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
+    
+    float dP1P2 = 0;
+    float dP1P3 = 0;
+    bool right = false;
+    bool left = false;
+
+    //y2 -y1 == 0 bug
+    if(y2 - y1 > 0) {
+        dP1P2 = (x2-x1)*1.0f/(y2-y1);
+    //无穷大
+    }else if(x2 > x1){
+        right = true;
+    //无穷小
+    }else {
+        left = true;
+    }
+    
+    if(y3-y1 > 0) {
+        dP1P3 = (x3-x1)*1.0f/(y3-y1);
+    }else {
+        dP1P3 = 0;
+    }
+    
+    CCLog("dp1p2 %f %f", dP1P2, dP1P3);
+
+    kmVec3 p1 = {x1, y1, z1};
+    kmVec3 p2 = {x2, y2, z2};
+    kmVec3 p3 = {x3, y3, z3};
+    
+
+    if(right || (!left && dP1P2 > dP1P3)) {
+        for(int y=y1; y <= y3; y++) {
+            if(y < y2) {
+                processScanLineWithLight(data, depth, width, height, y, p1, col1, p3, col3,  p1, col1,  p2, col2);
+            }else {
+                processScanLineWithLight(data, depth, width, height, y, p1, col1, p3, col3,  p2, col2,  p3, col3);
+            }
+        }
+    } else {
+        //p2 on left
+        for(int y=y1; y <= y3; y++) {
+            if(y < y2) {
+                processScanLineWithLight(data, depth, width, height, y, p1, col1, p2, col2, p1, col1, p3, col3);
+            }else {
+                processScanLineWithLight(data, depth, width, height, y, p2, col2, p3, col3, p1, col1, p3, col3);
+            }
+        }
+    }
+}
+

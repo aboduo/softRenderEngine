@@ -13,12 +13,12 @@ bool SoftView::init(){
     {
         return false;
     }
-    stop = false;
+    stop = true;
 
     renderYet = false;
 
     m = new Mesh();
-    m->loadFile("test1.babylon");
+    m->loadFile("test2.babylon");
 
     kmVec3Fill(&m->position, 0, 0, 0);
     kmQuaternionIdentity(&m->rotation); 
@@ -90,15 +90,18 @@ bool SoftView::init(){
     sp1->setPosition(ccp(600, fs.height/2));
 
 
-    tex = new CCTexture2D();
+    CCTexture2D *tex = new CCTexture2D();
     data = (unsigned char*)malloc(width*height*4);
     memset(data, 255, (width*height*4));
 
+    CCTexture2D *tex1 = new CCTexture2D();
     data1 = (unsigned char*)malloc(width*height*4);
     memset(data1, 255, (width*height*4));
 
     tex->initWithData(data, kCCTexture2DPixelFormat_RGBA8888, width, height, CCSizeMake(width, height));
+    tex1->initWithData(data, kCCTexture2DPixelFormat_RGBA8888, width, height, CCSizeMake(width, height));
     
+    //防止同一个Texture 被多次release掉
     //更新texture Data
     sp->initWithTexture(tex);
 
@@ -109,7 +112,7 @@ bool SoftView::init(){
     //sp->setFlipX(true);
 
     sp1->setScale(4);
-    sp1->initWithTexture(tex);
+    sp1->initWithTexture(tex1);
     
     sp1->setFlipY(true);
     //sp1->setFlipX(true);
@@ -141,7 +144,8 @@ void SoftView::update(float v){
     
     if(!stop) {
         cam->renderLine(sp1, m, data1, v); 
-        cam->renderFace(sp, m, data, v);
+        //cam->renderFace(sp, m, data, v);
+        cam->renderFaceWithLight(sp, m, data, v);
     }
     if(!renderYet) {
         renderYet = true;

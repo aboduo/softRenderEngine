@@ -17,6 +17,8 @@ public:
 
     void renderFace(CCSprite *, Mesh *m, unsigned char *data, float diff);
 
+    void renderFaceWithLight(CCSprite *, Mesh *m, unsigned char *data, float diff);
+
     void update(float diff);
 
     Camera(int w, int h):
@@ -35,6 +37,8 @@ private:
     float *depth;
     int width;
     int height;
+
+
 };
 
 #endif

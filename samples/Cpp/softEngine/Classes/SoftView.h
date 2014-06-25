@@ -23,7 +23,7 @@ public:
 private:
     bool stop;
     CCSprite *sp, *sp1;
-    CCTexture2D *tex;
+    //CCTexture2D *tex;
     unsigned char *data, *data1;
 
     int width;

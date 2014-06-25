@@ -22,6 +22,9 @@ struct Triangle {
 class Mesh {
 public:
     std::vector<kmVec3> vertices;
+    std::vector<kmVec3> normal;
+    std::vector<kmVec2> textureCoord;
+
     std::vector<Edge> edges;
     //int 1 b
     std::vector<Triangle> triangles;
