@@ -6,5 +6,8 @@ void drawTriangle(unsigned char *data, float *depth, int width, int height, int 
 void drawFace(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, int x2, int y2, float z2,  int x3, int y3, float z3,  int col);
 
 void drawFaceWithLight(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, kmVec3 col1, int x2, int y2, float z2, kmVec3 col2,  int x3, int y3, float z3,  kmVec3 col3);
+
+
+void drawFaceWithTexture(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, int x1, int y1, float z1, kmVec2 tex1, int x2, int y2, float z2, kmVec2 tex2,  int x3, int y3, float z3,  kmVec2 tex3);
 #endif
 

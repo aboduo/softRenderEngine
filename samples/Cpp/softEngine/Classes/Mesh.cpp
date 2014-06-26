@@ -51,29 +51,39 @@ void Mesh::loadFile(const char *fn) {
             textureCoord.push_back({tx, ty});
         }
     }
-
+    for(int i = 0; i <vertices.size(); i++) {
+        CCLog("vex %f %f %f", vertices[i].x, vertices[i].y, vertices[i].z);
+        CCLog("nor %f %f %f", normal[i].x, normal[i].y, normal[i].z);
+        CCLog("tex %f %f", textureCoord[i].x, textureCoord[i].y);
+    }
 
     /*
-    triangles.push_back({0, 7, 3});
+    int lend = 1;
+    //int ids[] = {0, 1, 2, 3, 4, 5, 0, 6, 7, 1, 8, 9};
+    int ids[] = {1, 8, 9};
+
+    for(int i = 0; i < lend; i++) {
+        triangles.push_back({ids[i*3], ids[i*3+1], ids[i*3+2]});
+        edges.push_back({ids[i*3], ids[i*3+1]});
+        edges.push_back({ids[i*3+1], ids[i*3+2]});
+        edges.push_back({ids[i*3+2], ids[i*3]});
+    }
+    */
     //triangles.push_back({0, 2, 1});
     //triangles.push_back({0, 1, 7});
-    triangles.push_back({3, 7, 4});
+    //triangles.push_back({3, 7, 4});
 
-    triangles.push_back({0, 3, 2});
-    triangles.push_back({3, 5, 2});
+    //triangles.push_back({0, 3, 2});
+    //triangles.push_back({3, 5, 2});
 
-    edges.push_back({0, 7});
-    edges.push_back({7, 3});
-    edges.push_back({3, 0});
 
-    edges.push_back({3, 7});
-    edges.push_back({7, 4});
-    edges.push_back({4, 3});
-    */
+
+    //edges.push_back({3, 7});
+    //edges.push_back({7, 4});
+    //edges.push_back({4, 3});
 
     int len2 = meshes["indices"].Size();
     
-
     int a, b, c;
     for(int i=0; i < len2; i++) {
         int idx = meshes["indices"][i].GetInt();
@@ -83,13 +93,16 @@ void Mesh::loadFile(const char *fn) {
             b = idx;
         } else {
             c = idx;
+            CCLog("tra %d %d %d", a, b, c);
             triangles.push_back({a, b, c});
 
             edges.push_back({a, b});
             edges.push_back({b, c});
             edges.push_back({c, a});
         }
+    
     }
+
     CCLog("vnum %d %d %d %d", len, len/3, len2, len2/3);
 
 }

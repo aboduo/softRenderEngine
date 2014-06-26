@@ -466,3 +466,154 @@ void drawFaceWithLight(unsigned char *data, float *depth, int width, int height,
     }
 }
 
+
+void putpixelWithColor(unsigned char *data, int width , int height, int x, int y, int r, int g, int b, int a) {
+    x = std::max(std::min(width-1, x), 0);
+    y = std::max(std::min(height-1, y), 0);
+    int id = y*width+x;
+
+    data[id*4+0] = r;
+    data[id*4+1] = g;
+    data[id*4+2] = b;
+    data[id*4+3] = a;
+}
+
+void processScanLineWithTexture(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, int y, kmVec3 pa, kmVec2 texa, kmVec3 pb, kmVec2 texb, kmVec3 pc, kmVec2 texc,  kmVec3 pd, kmVec2 texd) {
+    float gradient1 = pa.y != pb.y ? (y-pa.y)/(pb.y-pa.y) : 1;
+    float gradient2 = pc.y != pd.y? (y-pc.y)/(pd.y-pc.y) : 1;
+    
+    int sx = (int)interpolate(pa.x, pb.x, gradient1);
+    int st = (int)interpolate(pc.x, pd.x, gradient2);
+    
+    float zx = interpolate(pa.z, pb.z, gradient1);
+    float ze = interpolate(pc.z, pd.z, gradient2);
+    //float deltaZ = (ze-zx)/(st-sx);
+
+    //float lightS = interpolate(ca.x, cb.x, gradient1);
+    //float lightE = interpolate(cc.x, cd.x, gradient2);
+
+    float texXS = interpolate(texa.x, texb.x, gradient1);
+    float texXE = interpolate(texc.x, texd.x, gradient2);
+    float texYS = interpolate(texa.y, texb.y, gradient1);
+    float texYE = interpolate(texc.y, texd.y, gradient2);
+
+    //CCLog("line is %d %d %d", y, sx, st);
+    //CCLog("tex coord %f %f %f %f", texXS, texXE, texYS, texYE);
+
+    //CCLog("range %d %d %d %d", (int)(texXS*imgWidth), int(texXE*imgWidth), int(texYS*imgHeight), int(texYE*imgHeight));
+
+    for(int x=sx; x < st; x++) {
+        float gradientZ = (float)(x-sx)/(st-sx);
+        float newDepth = interpolate(zx, ze, gradientZ);
+        float oldDepth = depth[y*width+x];
+        if(oldDepth == 0 || newDepth < oldDepth) {
+            depth[y*width+x] = newDepth;
+            
+            float texX = interpolate(texXS, texXE, gradientZ);
+            float texY = interpolate(texYS, texYE, gradientZ);
+
+            //float light = interpolate(lightS, lightE, gradientZ);
+            texX = std::max(std::min(1.0f, texX), 0.0f);
+            texY = std::max(std::min(1.0f, texY), 0.0f);
+            int thei = (int)(texY*(imgHeight-1));
+            int twid = (int)(texX*(imgWidth-1));
+
+            int tid = (int)(thei*imgWidth+twid);
+            //CCLog("tid is %d %f %f %d %d", tid, texX, texY, twid, thei);
+
+            int r = texture[tid*4+0];
+            int g = texture[tid*4+1];
+            int b = texture[tid*4+2];
+            int a = texture[tid*4+3];
+
+            //CCLog("rgba %d %d %d %d", r, g, b, a);
+
+            //putpixelWithColor(data, width, height, x, y, 255, 255, 255, 255);
+            putpixelWithColor(data, width, height, x, y, r,  g, b, a);
+        }
+    }
+}
+
+//纹理Y坐标 和 采样数据需要变化一下
+void drawFaceWithTexture(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, int x1, int y1, float z1, kmVec2 tex1, int x2, int y2, float z2, kmVec2 tex2,  int x3, int y3, float z3,  kmVec2 tex3){
+
+    CCLog("drawFace With Texture %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
+    CCLog("texture coord %f %f %f %f %f %f", tex1.x, tex1.y, tex2.x, tex2.y, tex3.x, tex3.y);
+    CCLog("image size %d %d", imgWidth, imgHeight);
+    //调整y 坐标
+    tex1.y = 1-tex1.y;
+    tex2.y = 1-tex2.y;
+    tex3.y = 1-tex3.y;
+
+    //忘记交换z 值 导致depth 错乱了
+    if(y1 > y2) {
+        swap(&x1, &x2);
+        swap(&y1, &y2);
+        swap(&z1, &z2);
+        swap(&tex1, &tex2);
+    }
+    if(y2 > y3) {
+        swap(&x2, &x3);
+        swap(&y2, &y3);
+        swap(&z2, &z3);
+        swap(&tex2, &tex3);
+    }
+
+    if(y1 > y2) {
+        swap(&x1, &x2);
+        swap(&y1, &y2);
+        swap(&z1, &z2);
+        swap(&tex1, &tex2);
+    }
+    
+    CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
+    
+    float dP1P2 = 0;
+    float dP1P3 = 0;
+    bool right = false;
+    bool left = false;
+
+    //y2 -y1 == 0 bug
+    if(y2 - y1 > 0) {
+        dP1P2 = (x2-x1)*1.0f/(y2-y1);
+    //无穷大
+    }else if(x2 > x1){
+        right = true;
+    //无穷小
+    }else {
+        left = true;
+    }
+    
+    if(y3-y1 > 0) {
+        dP1P3 = (x3-x1)*1.0f/(y3-y1);
+    }else {
+        dP1P3 = 0;
+    }
+    
+    CCLog("dp1p2 %f %f", dP1P2, dP1P3);
+
+    kmVec3 p1 = {x1, y1, z1};
+    kmVec3 p2 = {x2, y2, z2};
+    kmVec3 p3 = {x3, y3, z3};
+    
+
+    CCLog("scan line");
+    if(right || (!left && dP1P2 > dP1P3)) {
+        for(int y=y1; y <= y3; y++) {
+            if(y < y2) {
+                processScanLineWithTexture(data, depth, texture, width, height, imgWidth, imgHeight, y, p1, tex1, p3, tex3,  p1, tex1,  p2, tex2);
+            }else {
+                processScanLineWithTexture(data, depth, texture, width, height, imgWidth, imgHeight, y, p1, tex1, p3, tex3,  p2, tex2,  p3, tex3);
+            }
+        }
+    } else {
+        //p2 on left
+        for(int y=y1; y <= y3; y++) {
+            if(y < y2) {
+                processScanLineWithTexture(data, depth, texture, width, height, imgWidth, imgHeight, y, p1, tex1, p2, tex2, p1, tex1, p3, tex3);
+            }else {
+                processScanLineWithTexture(data, depth, texture, width, height, imgWidth, imgHeight, y, p2, tex2, p3, tex3, p1, tex1, p3, tex3);
+            }
+        }
+    }
+}

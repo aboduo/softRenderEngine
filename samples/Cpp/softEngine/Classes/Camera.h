@@ -19,20 +19,22 @@ public:
 
     void renderFaceWithLight(CCSprite *, Mesh *m, unsigned char *data, float diff);
 
+    void renderFaceWithTexture(CCSprite *, Mesh *m, unsigned char *data, float diff);
+
     void update(float diff);
 
-    Camera(int w, int h):
-    width(w),
-    height(h)
-    {
-        depth = (float*)malloc(width*height*sizeof(float));
-        memset(depth, 0, width*height*sizeof(float));
-    }
+    Camera(int w, int h);
+
 
     ~Camera() {
         free(depth);
     }
 private:
+    CCImage *image;
+    unsigned char *texture;
+    int imgWidth;
+    int imgHeight;
+
     //深度缓冲区
     float *depth;
     int width;

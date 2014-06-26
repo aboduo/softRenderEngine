@@ -1,6 +1,7 @@
 #ifndef __MESH__
 #define __MESH__
 #include "kazmath/vec3.h"
+#include "kazmath/vec2.h"
 #include "kazmath/quaternion.h"
 #include <vector>
 

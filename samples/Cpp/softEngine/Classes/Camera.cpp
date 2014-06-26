@@ -19,6 +19,26 @@ void printMat(kmMat4 *mat) {
     printf("\n");
 }
 
+Camera::Camera(int w, int h):
+width(w),
+height(h)
+{
+    depth = (float*)malloc(width*height*sizeof(float));
+    memset(depth, 0, width*height*sizeof(float));
+    
+    image = new CCImage();
+    //bool loadSuc = image->initWithImageFile("testPlane2.png");
+    bool loadSuc = image->initWithImageFile("testLayout2.png");
+    CCLog("load image suc %d", loadSuc);
+
+    texture = image->getData();
+    imgWidth = image->getWidth();
+    imgHeight = image->getHeight();
+
+    CCLog("image size %d %d", imgWidth, imgHeight);
+}
+
+
 void Camera::update(float diff) {
 }
 
@@ -631,16 +651,6 @@ void Camera::renderFaceWithTexture(CCSprite *sp, Mesh *m, unsigned char *data, f
     kmMat4 matrixModel;
 
     kmMat4PerspectiveProjection(&matrixPers, 60, tsz.width/tsz.height, 0.2f, 30);
-    /*
-    printf("mat Look\n");
-    for(int i = 0; i < 16; i++) {
-        printf("%f ", matrixPers.mat[(i%4)*4+i/4]);
-        if(i %4 == 3) {
-            printf("\n");
-        }
-    }
-    printf("\n");
-    */
 
 
     int cx = tsz.width/2;
@@ -673,9 +683,6 @@ void Camera::renderFaceWithTexture(CCSprite *sp, Mesh *m, unsigned char *data, f
 
     //only rotation  no translation
     //世界坐标中 提取出旋转 矩阵应用到 normal 上面
-    //kmMat3 normalMatrix;
-    //kmMat4ExtractRotation(&normalMatrix, &matrixModel);
-    //printMat(&normalMatrix);
 
     kmVec3 light = {2, 2, 2};
 
@@ -732,25 +739,8 @@ void Camera::renderFaceWithTexture(CCSprite *sp, Mesh *m, unsigned char *data, f
 
     //绘制 line 最简单的 绘线算法
     //旋转X 方向 反了 为什么呢?
-    /*
-    for(int i=0; i < m->edges.size(); i++) {
-        int a = m->edges[i].a;
-        int b = m->edges[i].b;
-        
-        float apx = npos[a].x;
-        float apy = npos[a].y;
-        float aw = npos[a].w;
-
-        float bpx = npos[b].x;
-        float bpy = npos[b].y;
-        float bw = npos[b].w;
-
-        CCLog("axy bxy %f %f %f %f %f %f", apx, apy, aw, bpx, bpy, bw);
-        //根据角度绘制x y 方向角度绘制线
-        drawLine(data, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, apy/aw*tsz.height/2+cy, bpx/bw*tsz.width/2+cx, bpy/bw*tsz.height/2+cy, 1);
-    }
-    */
     
+    //
     for(int i=0; i < m->triangles.size(); i++) {
         int a = m->triangles[i].a;
         int b = m->triangles[i].b;
@@ -774,11 +764,8 @@ void Camera::renderFaceWithTexture(CCSprite *sp, Mesh *m, unsigned char *data, f
     
         CCLog("a b c %f %f %f  %f %f %f  %f %f %f", apx, apy, aw, bpx, bpy, bw, cpx, cpy, cw);
         //根据 zbuffer数据 更新depth数据
-        //drawTriangle(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, tsz.height-(apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, tsz.height-(bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, tsz.height-(cpy/cw*tsz.height/2+cy), cpz/cw, i);
-        //drawTriangle(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, i);
-        //drawFace(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, i);
-        
-        drawFaceWithLight(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, color[a], bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, color[b], cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, color[c]);
+        //drawFaceWithLight(data, depth, tsz.width, tsz.height, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, color[a], bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, color[b], cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, color[c]);
+        drawFaceWithTexture(data, depth, texture, tsz.width, tsz.height, imgWidth, imgHeight, apx/aw*tsz.width/2+cx, (apy/aw*tsz.height/2+cy), apz/aw, m->textureCoord[a], bpx/bw*tsz.width/2+cx, (bpy/bw*tsz.height/2+cy), bpz/bw, m->textureCoord[b], cpx/cw*tsz.width/2+cx, (cpy/cw*tsz.height/2+cy), cpz/cw, m->textureCoord[c]);
 
     }
 
@@ -799,9 +786,5 @@ void Camera::renderFaceWithTexture(CCSprite *sp, Mesh *m, unsigned char *data, f
     
     CCLog("set new Texture");
 
-
     //调整纹理 Y 方向 纹理坐标参数
-    //sp->setFlipY(false);
-    //float sca = sp->getScaleX();
-    //sp->setScaleY(-sca);
 }
