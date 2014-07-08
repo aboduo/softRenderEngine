@@ -177,6 +177,8 @@ bool CCTexture2D::initWithData(const void *data, CCTexture2DPixelFormat pixelFor
 {
     unsigned int bitsPerPixel;
     //Hack: bitsPerPixelForFormat returns wrong number for RGB_888 textures. See function.
+
+    //IFloat is 32 bit 
     if(pixelFormat == kCCTexture2DPixelFormat_RGB888)
     {
         bitsPerPixel = 24;
@@ -242,6 +244,12 @@ bool CCTexture2D::initWithData(const void *data, CCTexture2DPixelFormat pixelFor
     case kCCTexture2DPixelFormat_I8:
         glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
         break;
+
+    //导入浮点数 深度数据 用于测试
+    case kCCTexture2DPixelFormat_I8Float:
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, (GLSizei)pixelsWide, (GLsizei)pixelsHigh, 0, GL_LUMINANCE, GL_FLOAT, data);
+        break;
+
     default:
         CCAssert(0, "NSInternalInconsistencyException");
 
@@ -926,6 +934,9 @@ unsigned int CCTexture2D::bitsPerPixelForFormat(CCTexture2DPixelFormat format)
 		case kCCTexture2DPixelFormat_PVRTC2:
 			ret = 2;
 			break;
+        case kCCTexture2DPixelFormat_I8Float:
+            ret = 32;
+            break
 		default:
 			ret = -1;
 			CCAssert(false , "unrecognized pixel format");

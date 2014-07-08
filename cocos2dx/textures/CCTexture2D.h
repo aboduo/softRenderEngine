@@ -82,7 +82,10 @@ typedef enum {
     kTexture2DPixelFormat_A8 = kCCTexture2DPixelFormat_A8,
     kTexture2DPixelFormat_RGBA4444 = kCCTexture2DPixelFormat_RGBA4444,
     kTexture2DPixelFormat_RGB5A1 = kCCTexture2DPixelFormat_RGB5A1,
-    kTexture2DPixelFormat_Default = kCCTexture2DPixelFormat_Default
+    kTexture2DPixelFormat_Default = kCCTexture2DPixelFormat_Default,
+
+    //R=G=B = L    A = 1.0
+    kCCTexture2DPixelFormat_I8Float,
 
 } CCTexture2DPixelFormat;
 
