@@ -73,23 +73,23 @@ void Mesh::loadFile(const char *fn) {
     
     //triangles.push_back({0, 1, 2});
     
-    triangles.push_back({3, 4, 5});
+    //triangles.push_back({3, 4, 5});
     
     //triangles.push_back({3, 7, 4});
 
     //triangles.push_back({0, 3, 2});
     //triangles.push_back({3, 5, 2});
 
-
+    /*
     edges.push_back({3, 4});
     edges.push_back({4, 5});
     edges.push_back({5, 3});
+    */
 
     //edges.push_back({3, 7});
     //edges.push_back({7, 4});
     //edges.push_back({4, 3});
 
-    /*
     int len2 = meshes["indices"].Size();
     
     int a, b, c;
@@ -112,7 +112,8 @@ void Mesh::loadFile(const char *fn) {
     }
 
     CCLog("vnum %d %d %d %d", len, len/3, len2, len2/3);
-    */
+
+
 }
 
 
@@ -126,15 +127,13 @@ void Mesh::update(float diff) {
     kmQuaternion ry;
 
     float t = 3;
-    kmQuaternionRotationAxis(&rotation, &axis, -passTime*3.14/t);
+    //kmQuaternionRotationAxis(&rotation, &axis, -passTime*3.14/t);
     
-    //kmQuaternionRotationAxis(&ry, &axis, passTime*3.14/t);
+    kmQuaternionRotationAxis(&ry, &axis, passTime*3.14/t);
 
-    /*
     kmQuaternion rx;
     kmVec3Fill(&axis, 1, 0, 0);
     kmQuaternionRotationAxis(&rx, &axis, passTime*3.14/t);
-    */
 
-    //kmQuaternionMultiply(&rotation, &rx, &ry);
+    kmQuaternionMultiply(&rotation, &rx, &ry);
 }

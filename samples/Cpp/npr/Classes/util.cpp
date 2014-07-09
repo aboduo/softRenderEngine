@@ -17,10 +17,10 @@ static void printMat(kmMat4 *mat) {
 }
 
 void printVec3(kmVec3 p) {
-    CCLog("%f %f %f", p.x, p.y, p.z);
+    //CCLog("%f %f %f", p.x, p.y, p.z);
 }
 void printQuaternion(kmQuaternion q) {
-    CCLog("%f %f %f %f", q.x, q.y, q.z, q.w);
+    //CCLog("%f %f %f %f", q.x, q.y, q.z, q.w);
 }
 int color[][3] = {
     {255, 0, 0},
@@ -80,7 +80,7 @@ void swap(T *a, T *b) {
 
 //扫描线fill 算法
 void drawTriangle(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, int x2, int y2, float z2, int x3, int y3, float z3, int col){
-    //CCLog("drawTriangle %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
+    ////CCLog("drawTriangle %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
     int temp;
     if(y1 > y2) {
         swap(&x1, &x2);
@@ -95,8 +95,8 @@ void drawTriangle(unsigned char *data, float *depth, int width, int height, int 
         swap(&y1, &y2);
     }
 
-    //CCLog("drawTriangle2 %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3 );
-    ////CCLog("%f %f", x2-x1, y2-y1); 
+    ////CCLog("drawTriangle2 %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3 );
+    //////CCLog("%f %f", x2-x1, y2-y1); 
     
     float dx_far = (x3-x1)*1.0f/(y3-y1+1);
     float dx_upper = (x2-x1)*1.0f/(y2-y1+1);
@@ -118,8 +118,8 @@ void drawTriangle(unsigned char *data, float *depth, int width, int height, int 
     float maxY = y3 > height-1? height-1: y3;
 
 
-    //CCLog("dx dy %f %f %f", dx_far, dx_upper, dx_low);
-    //CCLog("xf xt %f %f", xf, xt);
+    ////CCLog("dx dy %f %f %f", dx_far, dx_upper, dx_low);
+    ////CCLog("xf xt %f %f", xf, xt);
     //线性插值得到 z 值
     int vx1 = x3-x1;
     int vy1 = y3-y1;
@@ -205,7 +205,7 @@ void drawTriangle(unsigned char *data, float *depth, int width, int height, int 
 //c color 
 void drawLine(unsigned char *data, int width, int height, int x1, int y1, int x2, int y2, int col) {
   int x, y, dx, dy, dx1, dy1, px, py, xe, ye, i;
-  //CCLog("draw Line %d %d %d %d", x1, y1, x2, y2);
+  ////CCLog("draw Line %d %d %d %d", x1, y1, x2, y2);
   dx = x2 - x1;
   dy = y2 - y1;
   dx1 = fabs(dx);
@@ -301,7 +301,7 @@ void processScanLine(unsigned char *data, float *depth, int width, int height, i
 
 
 void drawFace(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, int x2, int y2, float z2,  int x3, int y3, float z3,  int col) {
-    //CCLog("drawFace %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
+    ////CCLog("drawFace %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
 
     //忘记交换z 值 导致depth 错乱了
     if(y1 > y2) {
@@ -320,7 +320,7 @@ void drawFace(unsigned char *data, float *depth, int width, int height, int x1, 
         swap(&z1, &z2);
     }
     
-    //CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
+    ////CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
     
     float dP1P2 = 0;
     float dP1P3 = 0;
@@ -344,7 +344,7 @@ void drawFace(unsigned char *data, float *depth, int width, int height, int x1, 
         dP1P3 = 0;
     }
     
-    //CCLog("dp1p2 %f %f", dP1P2, dP1P3);
+    ////CCLog("dp1p2 %f %f", dP1P2, dP1P3);
 
     kmVec3 p1 = {x1, y1, z1};
     kmVec3 p2 = {x2, y2, z2};
@@ -414,8 +414,8 @@ void processScanLineWithLight(unsigned char *data, float *depth, int width, int 
 }
 
 void drawFaceWithLight(unsigned char *data, float *depth, int width, int height, int x1, int y1, float z1, kmVec3 col1, int x2, int y2, float z2, kmVec3 col2,  int x3, int y3, float z3,  kmVec3 col3){
-    //CCLog("drawFace %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
-    //CCLog("color %f %f %f", col1.x, col2.x, col3.x);
+    ////CCLog("drawFace %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
+    ////CCLog("color %f %f %f", col1.x, col2.x, col3.x);
 
     //忘记交换z 值 导致depth 错乱了
     if(y1 > y2) {
@@ -438,7 +438,7 @@ void drawFaceWithLight(unsigned char *data, float *depth, int width, int height,
         swap(&col1, &col2);
     }
     
-    //CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
+    ////CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
     
     float dP1P2 = 0;
     float dP1P3 = 0;
@@ -462,7 +462,7 @@ void drawFaceWithLight(unsigned char *data, float *depth, int width, int height,
         dP1P3 = 0;
     }
     
-    //CCLog("dp1p2 %f %f", dP1P2, dP1P3);
+    ////CCLog("dp1p2 %f %f", dP1P2, dP1P3);
 
     kmVec3 p1 = {x1, y1, z1};
     kmVec3 p2 = {x2, y2, z2};
@@ -520,10 +520,10 @@ void processScanLineWithTexture(unsigned char *data, float *depth, unsigned char
     float texYS = interpolate(texa.y, texb.y, gradient1);
     float texYE = interpolate(texc.y, texd.y, gradient2);
 
-    ////CCLog("line is %d %d %d", y, sx, st);
-    ////CCLog("tex coord %f %f %f %f", texXS, texXE, texYS, texYE);
+    //////CCLog("line is %d %d %d", y, sx, st);
+    //////CCLog("tex coord %f %f %f %f", texXS, texXE, texYS, texYE);
 
-    ////CCLog("range %d %d %d %d", (int)(texXS*imgWidth), int(texXE*imgWidth), int(texYS*imgHeight), int(texYE*imgHeight));
+    //////CCLog("range %d %d %d %d", (int)(texXS*imgWidth), int(texXE*imgWidth), int(texYS*imgHeight), int(texYE*imgHeight));
 
     for(int x=sx; x < st; x++) {
         float gradientZ = (float)(x-sx)/(st-sx);
@@ -542,14 +542,14 @@ void processScanLineWithTexture(unsigned char *data, float *depth, unsigned char
             int twid = (int)(texX*(imgWidth-1));
 
             int tid = (int)(thei*imgWidth+twid);
-            ////CCLog("tid is %d %f %f %d %d", tid, texX, texY, twid, thei);
+            //////CCLog("tid is %d %f %f %d %d", tid, texX, texY, twid, thei);
 
             int r = texture[tid*4+0];
             int g = texture[tid*4+1];
             int b = texture[tid*4+2];
             int a = texture[tid*4+3];
 
-            ////CCLog("rgba %d %d %d %d", r, g, b, a);
+            //////CCLog("rgba %d %d %d %d", r, g, b, a);
 
             //putpixelWithColor(data, width, height, x, y, 255, 255, 255, 255);
             putpixelWithColor(data, width, height, x, y, r,  g, b, a);
@@ -562,9 +562,9 @@ void processScanLineWithTexture(unsigned char *data, float *depth, unsigned char
 
 void drawFaceWithTexture(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, int x1, int y1, float z1, kmVec2 tex1, int x2, int y2, float z2, kmVec2 tex2,  int x3, int y3, float z3,  kmVec2 tex3){
 
-    //CCLog("drawFace With Texture %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
-    //CCLog("texture coord %f %f %f %f %f %f", tex1.x, tex1.y, tex2.x, tex2.y, tex3.x, tex3.y);
-    //CCLog("image size %d %d", imgWidth, imgHeight);
+    ////CCLog("drawFace With Texture %d %d %f %d %d %f %d %d %f", x1, y1, z1, x2, y2, z2, x3, y3, z3);
+    ////CCLog("texture coord %f %f %f %f %f %f", tex1.x, tex1.y, tex2.x, tex2.y, tex3.x, tex3.y);
+    ////CCLog("image size %d %d", imgWidth, imgHeight);
     //调整y 坐标
     tex1.y = 1-tex1.y;
     tex2.y = 1-tex2.y;
@@ -591,7 +591,7 @@ void drawFaceWithTexture(unsigned char *data, float *depth, unsigned char *textu
         swap(&tex1, &tex2);
     }
     
-    //CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
+    ////CCLog("x 1 2 3 is %d %d %d %d %d %d", x1, y1, x2, y2, x3, y3);
     
     float dP1P2 = 0;
     float dP1P3 = 0;
@@ -615,14 +615,14 @@ void drawFaceWithTexture(unsigned char *data, float *depth, unsigned char *textu
         dP1P3 = 0;
     }
     
-    //CCLog("dp1p2 %f %f", dP1P2, dP1P3);
+    ////CCLog("dp1p2 %f %f", dP1P2, dP1P3);
 
     kmVec3 p1 = {x1, y1, z1};
     kmVec3 p2 = {x2, y2, z2};
     kmVec3 p3 = {x3, y3, z3};
     
 
-    //CCLog("scan line");
+    ////CCLog("scan line");
     if(right || (!left && dP1P2 > dP1P3)) {
         for(int y=y1; y <= y3; y++) {
             if(y < y2) {
@@ -682,11 +682,11 @@ static void processScanLineShadow(unsigned char *data, float *depth, float *ligh
 
     //interpolate light value
 
-    ////CCLog("line %f %f %f %f %f %f %f %f", pa.x, pa.y, pb.x, pb.y, pc.x, pc.y, pd.x, pd.y);
+    //////CCLog("line %f %f %f %f %f %f %f %f", pa.x, pa.y, pb.x, pb.y, pc.x, pc.y, pd.x, pd.y);
     
     int sx = (int)interpolate(pa.x, pb.x, gradient1);
     int st = (int)interpolate(pc.x, pd.x, gradient2);
-    //CCLog("start %d %d %d", sx, st, y);
+    ////CCLog("start %d %d %d", sx, st, y);
     printVec3(wpa);
     printVec3(wpb);
     printVec3(wpc);
@@ -784,7 +784,7 @@ void swapVec3(kmVec3 *pa, kmVec3 *pb) {
 }
 
 void drawShadow(unsigned char *data, float *depth, float *lightDepth, int width, int height, kmMat4 lightMatrix, kmVec3 p1, kmVec3 wp1,  kmVec3 p2, kmVec3 wp2,  kmVec3 p3, kmVec3 wp3){
-    //CCLog("drawShadow");
+    ////CCLog("drawShadow");
     printVec3(p1);
     printVec3(p2);
     printVec3(p3);
@@ -802,7 +802,7 @@ void drawShadow(unsigned char *data, float *depth, float *lightDepth, int width,
         swapVec3(&wp1, &wp2);
     }
 
-    //CCLog("drawShadow2");
+    ////CCLog("drawShadow2");
     printVec3(p1);
     printVec3(p2);
     printVec3(p3);
@@ -833,7 +833,7 @@ void drawShadow(unsigned char *data, float *depth, float *lightDepth, int width,
     int minY = std::min(std::max(0, (int)p1.y), height-1);
     int maxY = std::min(std::max(0, (int)p3.y), height-1);
 
-    //CCLog("min max Y %d %d", minY, maxY);
+    ////CCLog("min max Y %d %d", minY, maxY);
     if(right || (!left && dP1P2 > dP1P3)) {
         for(int y=minY; y <= maxY; y++) {
             if(y < p2.y) {
@@ -947,10 +947,10 @@ static void processScanTextureNPR(unsigned char *data, float *depth, unsigned ch
     float ds = interpolate(pa.diff, pb.diff, gradient1);
     float de = interpolate(pc.diff, pd.diff, gradient2);
 
-    ////CCLog("line is %d %d %d", y, sx, st);
-    ////CCLog("tex coord %f %f %f %f", texXS, texXE, texYS, texYE);
+    //////CCLog("line is %d %d %d", y, sx, st);
+    //////CCLog("tex coord %f %f %f %f", texXS, texXE, texYS, texYE);
 
-    ////CCLog("range %d %d %d %d", (int)(texXS*imgWidth), int(texXE*imgWidth), int(texYS*imgHeight), int(texYE*imgHeight));
+    //////CCLog("range %d %d %d %d", (int)(texXS*imgWidth), int(texXE*imgWidth), int(texYS*imgHeight), int(texYE*imgHeight));
     int minX = std::min(std::max(0, sx), width-1);
     int maxX = std::min(std::max(0, st), width);
 
@@ -972,7 +972,7 @@ static void processScanTextureNPR(unsigned char *data, float *depth, unsigned ch
             int twid = (int)(texX*(imgWidth-1));
 
             int tid = (int)(thei*imgWidth+twid);
-            ////CCLog("tid is %d %f %f %d %d", tid, texX, texY, twid, thei);
+            //////CCLog("tid is %d %f %f %d %d", tid, texX, texY, twid, thei);
 
             int r = texture[tid*4+0];
             int g = texture[tid*4+1];
@@ -993,7 +993,7 @@ static void processScanTextureNPR(unsigned char *data, float *depth, unsigned ch
             g = g*difG;
             b = b*difB;
 
-            ////CCLog("rgba %d %d %d %d", r, g, b, a);
+            //////CCLog("rgba %d %d %d %d", r, g, b, a);
 
             //putpixelWithColor(data, width, height, x, y, 255, 255, 255, 255);
             putpixelWithColor(data, width, height, x, y, r,  g, b, a);
@@ -1095,7 +1095,7 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
     //pc pd 插值 normal  nor2
 
     //start identity ---> nor1  gradient1  == normal
-    CCLog("normal");
+    //CCLog("normal");
     printVec3(pa.normal);
     printVec3(pb.normal);
 
@@ -1121,7 +1121,7 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
     kmVec3 normalEnd;
     kmQuaternionMultiplyVec3(&normalEnd, &norB, &pc.normal);
 
-    CCLog("start normal");
+    //CCLog("start normal");
     printVec3(normalStart);
     printVec3(normalEnd);
     
@@ -1141,14 +1141,14 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
     kmVec3Normalize(&ne, &ne);
     */
 
-    ////CCLog("line is %d %d %d", y, sx, st);
-    ////CCLog("tex coord %f %f %f %f", texXS, texXE, texYS, texYE);
+    //////CCLog("line is %d %d %d", y, sx, st);
+    //////CCLog("tex coord %f %f %f %f", texXS, texXE, texYS, texYE);
 
-    ////CCLog("range %d %d %d %d", (int)(texXS*imgWidth), int(texXE*imgWidth), int(texYS*imgHeight), int(texYE*imgHeight));
+    //////CCLog("range %d %d %d %d", (int)(texXS*imgWidth), int(texXE*imgWidth), int(texYS*imgHeight), int(texYE*imgHeight));
     int minX = std::min(std::max(0, sx), width-1);
     int maxX = std::min(std::max(0, st), width);
 
-    CCLog("x normal");
+    //CCLog("x normal");
     for(int x=minX; x < maxX; x++) {
         float gradientZ = (float)(x-sx)/(st-sx);
         float newDepth = interpolate(zx, ze, gradientZ);
@@ -1167,7 +1167,7 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
             int twid = (int)(texX*(imgWidth-1));
 
             int tid = (int)(thei*imgWidth+twid);
-            ////CCLog("tid is %d %f %f %d %d", tid, texX, texY, twid, thei);
+            //////CCLog("tid is %d %f %f %d %d", tid, texX, texY, twid, thei);
 
             int r = texture[tid*4+0];
             int g = texture[tid*4+1];
@@ -1193,7 +1193,7 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
             //lightDir normal 
             float diff = kmVec3Dot(&lightDir, &normal);
             //printVec3(lightDir);
-            printf("%f ", diff);
+            //printf("%f ", diff);
             //diff = std::max(0.0f, diff);
             //diff = (diff+0.3f)/1.4f;
             
@@ -1214,7 +1214,7 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
             b = b*difB;
             
 
-            ////CCLog("rgba %d %d %d %d", r, g, b, a);
+            //////CCLog("rgba %d %d %d %d", r, g, b, a);
 
             //putpixelWithColor(data, width, height, x, y, 255, 255, 255, 255);
             
@@ -1234,12 +1234,12 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
             
         }
     }
-    printf("\n");
+    //printf("\n");
 }
 
 //每个像素插值 normal 同时 计算和光线方向lightDir 的diff值
 void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, unsigned char *nprShade, CCSize nprSize, kmVec3 lightDir, PosTexNor p1,  PosTexNor p2, PosTexNor p3){
-    CCLog("drawFaceNPRPerPixel");
+    //CCLog("drawFaceNPRPerPixel");
 
     p1.tex.y = 1-p1.tex.y;
     p2.tex.y = 1-p2.tex.y;

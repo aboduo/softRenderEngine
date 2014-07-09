@@ -61,7 +61,7 @@ public:
             int len = vertices.size();
             edges.push_back({len-2, len-1});    
         }
-        CCLog("edge %d %d", vertices.size(), edges.size());
+        //CCLog("edge %d %d", vertices.size(), edges.size());
     }
 
     void render() {

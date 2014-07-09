@@ -196,7 +196,6 @@ void SoftView::update(float v){
         cam->swapBuffer(sp, data);
         */
 
-        /*
         m->update(v);
 
         cam->initBuffer(data);
@@ -204,18 +203,18 @@ void SoftView::update(float v){
         cam->swapBuffer(sp, data);
 
         cam->renderLine(sp1, m, data1, v); 
-        */
     }
 
     if(!renderYet) {
         renderYet = true;
 
-
+        /*
         cam->initBuffer(data);
         cam->renderFaceTextureNPR(sp, m, data, v);
         cam->swapBuffer(sp, data);
 
         cam->renderLine(sp1, m, data1, v); 
+        */
 
 
         /*
