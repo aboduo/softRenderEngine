@@ -35,8 +35,10 @@ struct PosTexNor {
 
 //light direction 1 1 1
 //normal 标记每个定点的法向量 计算diff
-void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, unsigned char *nprShade, CCSize nprSize, kmVec3 lightDir, PosTexNor p1,  PosTexNor p2, PosTexNor p3);
+void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, unsigned char *nprShade, CCSize nprSize, kmVec3 lightDir, PosTexNor p1,  PosTexNor p2, PosTexNor p3, unsigned char* normalMap, kmVec3 planeNormal);
 
+void drawOutline(unsigned char *data, float *depth, unsigned char *outlineData, int width, int height);
+void drawCrease(unsigned char *data, unsigned char *normalMap, int width, int height);
 
 
 void drawFaceWithTexture(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, int x1, int y1, float z1, kmVec2 tex1, int x2, int y2, float z2, kmVec2 tex2,  int x3, int y3, float z3,  kmVec2 tex3);

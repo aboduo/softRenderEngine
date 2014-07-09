@@ -59,9 +59,13 @@ void Mesh::loadFile(const char *fn) {
     }
 
     /*
-    int lend = 1;
     //int ids[] = {0, 1, 2, 3, 4, 5, 0, 6, 7, 1, 8, 9};
-    int ids[] = {1, 8, 9};
+    */
+    
+    
+    /*
+    int lend = 2;
+    int ids[] = {3, 4, 5, 13, 10, 2};
 
     for(int i = 0; i < lend; i++) {
         triangles.push_back({ids[i*3], ids[i*3+1], ids[i*3+2]});
@@ -70,10 +74,10 @@ void Mesh::loadFile(const char *fn) {
         edges.push_back({ids[i*3+2], ids[i*3]});
     }
     */
-    
     //triangles.push_back({0, 1, 2});
     
     //triangles.push_back({3, 4, 5});
+    //triangles.push_back({13, 10, 2});
     
     //triangles.push_back({3, 7, 4});
 
@@ -89,6 +93,7 @@ void Mesh::loadFile(const char *fn) {
     //edges.push_back({3, 7});
     //edges.push_back({7, 4});
     //edges.push_back({4, 3});
+
 
     int len2 = meshes["indices"].Size();
     
@@ -110,9 +115,11 @@ void Mesh::loadFile(const char *fn) {
         }
     
     }
-
-    CCLog("vnum %d %d %d %d", len, len/3, len2, len2/3);
-
+    for(int i = 0; i < triangles.size(); i++) {
+        Triangle t = triangles[i]; 
+        CCLog("face %d %d %d", t.a, t.b, t.c);
+    }
+    //CCLog("vnum %d %d %d %d", len, len/3, len2, len2/3);
 
 }
 

@@ -16,13 +16,13 @@ static void printMat(kmMat4 *mat) {
     //printf("\n");
 }
 
-void printVec3(kmVec3 p) {
-    //CCLog("%f %f %f", p.x, p.y, p.z);
+static void printVec3(kmVec3 p) {
+    CCLog("%f %f %f", p.x, p.y, p.z);
 }
 void printQuaternion(kmQuaternion q) {
     //CCLog("%f %f %f %f", q.x, q.y, q.z, q.w);
 }
-int color[][3] = {
+static int color[][3] = {
     {255, 0, 0},
     {255, 100, 0},
     {255, 0, 100},
@@ -1065,7 +1065,10 @@ void drawFaceNPR(unsigned char *data, float *depth, unsigned char *texture, int 
 }
 
 
-static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, unsigned char* nprShade, CCSize nprSize, kmVec3 lightDir, int y, PosTexNor pa, PosTexNor pb, PosTexNor pc, PosTexNor pd) {
+static void putNormal(int x, int y, int width, int height, unsigned char *normalMap, kmVec3 nor);
+
+
+static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, unsigned char* nprShade, CCSize nprSize, kmVec3 lightDir, int y, PosTexNor pa, PosTexNor pb, PosTexNor pc, PosTexNor pd, unsigned char *normalMap, kmVec3 planeNormal) {
     float gradient1 = pa.p.y != pb.p.y ? (y-pa.p.y)/(pb.p.y-pa.p.y) : 1;
     float gradient2 = pc.p.y != pd.p.y? (y-pc.p.y)/(pd.p.y-pc.p.y) : 1;
     
@@ -1096,11 +1099,30 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
 
     //start identity ---> nor1  gradient1  == normal
     //CCLog("normal");
+    //printVec3(pa.normal);
+    //printVec3(pb.normal);
+
+
+    /*
+    CCLog("pos");
+    printVec3(pa.p);
+    printVec3(pb.p);
+    printVec3(pc.p);
+    printVec3(pd.p);
+
+    CCLog("before vec3");
     printVec3(pa.normal);
     printVec3(pb.normal);
+    printVec3(pc.normal);
+    printVec3(pd.normal);
+    CCLog("after vec3");
+    */
 
-    kmVec3 fallback = {0, 1, 0};
+    /*
+    kmVec3 fallback = {1, 0, 0};
     kmQuaternion norRot1, norRot2;
+    
+
     kmQuaternionRotationBetweenVec3(&norRot1, &pa.normal, &pb.normal, &fallback);
     kmQuaternionRotationBetweenVec3(&norRot2, &pc.normal, &pd.normal, &fallback);
     
@@ -1131,7 +1153,25 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
     printQuaternion(diffSE);
     //normalStart ---> rotate ---> diffSE
     //从normalStart 到 normalEnd 所在横行的 normal插值
+    */
 
+
+    
+    kmVec3 linearNorS = interpolateVec3(pa.normal, pb.normal, gradient1);
+    kmVec3Normalize(&linearNorS, &linearNorS);
+
+    kmVec3 linearNorE = interpolateVec3(pc.normal, pd.normal, gradient2);
+    kmVec3Normalize(&linearNorE, &linearNorE);
+
+
+    /*
+    kmVec3 an = interpolateVec3(pa.normal, pb.normal, 0.5f);
+    kmVec3Normalize(&an, &an);
+    kmVec3 bn = interpolateVec3(pc.normal, pd.normal, 0.5f);
+    kmVec3Normalize(&bn, &bn);
+    kmVec3 flatNormal = interpolateVec3(an, bn, 0.5f);
+    kmVec3Normalize(&flatNormal, &flatNormal);
+    */
 
     /*
     kmVec3 ns = interpolateVec3(pa.normal, pb.normal, gradient1);
@@ -1175,23 +1215,38 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
             int a = texture[tid*4+3];
             
             //interpolate from identity to target 
-            kmQuaternion normalRot;
-            kmQuaternionSlerp(&normalRot, &startRot, &diffSE, gradientZ);
             
+            //kmQuaternion normalRot;
+            //kmQuaternionSlerp(&normalRot, &startRot, &diffSE, gradientZ);
+            
+
             //how to get normal rotation ?direction?
+            /*
             kmVec3 normal;
             kmQuaternionMultiplyVec3(&normal, &normalRot, &normalStart);
             printVec3(normal);
             kmVec3Normalize(&normal, &normal);
+            */
+
             //printVec3(normal);
 
             /*
             kmVec3 normal = interpolateVec3(ns, ne, gradientZ);
             kmVec3Normalize(&normal, &normal);
             */
+
+            //Guard shade
+            //phone shade
+            kmVec3 linearNormal = interpolateVec3(linearNorS, linearNorE, gradientZ);
+            kmVec3Normalize(&linearNormal, &linearNormal);
+
             
             //lightDir normal 
-            float diff = kmVec3Dot(&lightDir, &normal);
+            
+            //float diff = kmVec3Dot(&lightDir, &normal);
+
+            float diff = kmVec3Dot(&lightDir, &linearNormal);
+
             //printVec3(lightDir);
             //printf("%f ", diff);
             //diff = std::max(0.0f, diff);
@@ -1221,6 +1276,11 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
             putpixelWithColor(data, width, height, x, y, r,  g, b, a);
 
             
+            //使用线性normal 来绘制 crease 锋利的边
+            //putNormal(x, y, width, height, normalMap, linearNormal);
+            //putNormal(x, y, width, height, normalMap, flatNormal);
+            putNormal(x, y, width, height, normalMap, planeNormal);
+            
             //test Normal direction
             //-1 1 normal 值
             
@@ -1236,9 +1296,20 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
     }
     //printf("\n");
 }
+//encode normal information 到normalMap 里面
+static void putNormal(int x, int y, int width, int height, unsigned char *normalMap, kmVec3 nor) {
+    if(x < 0 || x >= width-1 || y < 0 || y >= height-1)
+        return;
+    
+    //-1 1 范围
+    int nid = y*width+x;
+    normalMap[nid*3+0] = (nor.x+1)/2.0f*255;
+    normalMap[nid*3+1] = (nor.y+1)/2.0f*255;
+    normalMap[nid*3+2] = (nor.z+1)/2.0f*255;
+}
 
 //每个像素插值 normal 同时 计算和光线方向lightDir 的diff值
-void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, unsigned char *nprShade, CCSize nprSize, kmVec3 lightDir, PosTexNor p1,  PosTexNor p2, PosTexNor p3){
+void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, unsigned char *nprShade, CCSize nprSize, kmVec3 lightDir, PosTexNor p1,  PosTexNor p2, PosTexNor p3, unsigned char *normalMap, kmVec3 planeNormal){
     //CCLog("drawFaceNPRPerPixel");
 
     p1.tex.y = 1-p1.tex.y;
@@ -1286,9 +1357,9 @@ void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *textu
         for(int y=minY; y <= maxY  ; y++) {
             count++;
             if(y < p2.p.y) {
-                processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p1, p3, p1, p2);
+                processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p1, p3, p1, p2, normalMap, planeNormal);
             }else {
-                processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p1, p3, p2, p3);
+                processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p1, p3, p2, p3, normalMap, planeNormal);
             }
         }
     } else {
@@ -1296,10 +1367,106 @@ void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *textu
         for(int y=minY; y <= maxY  ; y++) {
             count++;
             if(y < p2.p.y) {
-                processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p1, p2, p1, p3);
+                processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p1, p2, p1, p3, normalMap, planeNormal);
             }else {
-                processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p2, p3, p1, p3);
+                processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p2, p3, p1, p3, normalMap, planeNormal);
             }
         }
+    }
+}
+
+void drawOutline(unsigned char *data, float *depth, unsigned char *outlineData, int width, int height){
+    for(int j=1;  j <= height-2; j++) {
+        for(int i=1; i <= width-2; i++) {
+            int left = j*width+i-1;
+            int right = j*width+i+1;
+            int down = (j-1)*width+i;
+            int up = (j+1)*width+i;
+            int cur = j*width+i;
+            
+            float diff1 = fabs(depth[cur]-depth[left]);
+            float diff2 = fabs(depth[cur]-depth[right]);
+            float diff3 = fabs(depth[cur]-depth[up]);
+            float diff4 = fabs(depth[cur]-depth[down]);
+            //blend use multiply
+            if(diff1 > 0.1 || diff2 > 0.1 || diff3 > 0.1 || diff4 > 0.1) {
+                /*
+                outlineData[cur*4+0] = 0; 
+                outlineData[cur*4+1] = 0; 
+                outlineData[cur*4+2] = 0; 
+                outlineData[cur*4+3] = 0; 
+                */
+
+                data[cur*4+0] = 255; 
+                data[cur*4+1] = 255; 
+                data[cur*4+2] = 255; 
+                data[cur*4+3] = 255; 
+
+            }
+        }
+    }
+}
+
+//-1.0 1.0 range
+kmVec3 getNor(unsigned char *normalMap, int nid) {
+    kmVec3 temp = {normalMap[nid*3+0]/255.0f*2.0f-1.0f, normalMap[nid*3+1]/255.0f*2.0f-1.0f, normalMap[nid*3+2]/255.0f*2.0f-1.0f};
+    //printVec3(temp);
+    return temp;
+}
+
+
+void drawCrease(unsigned char *data, unsigned char *normalMap, int width, int height){
+    CCLog("drawCrease");
+    for(int j=1; j <= height-2; j++) {
+        for(int i=1; i <= width-2; i++) {
+            int left = j*width+i-1;
+            int right = j*width+i+1;
+            int down = (j-1)*width+i;
+            int up = (j+1)*width+i;
+            int cur = j*width+i;
+
+            //测试渲染 normalMap
+            /*
+            data[cur*4+0] = normalMap[cur*3+0];
+            data[cur*4+1] = normalMap[cur*3+1];
+            data[cur*4+2] = normalMap[cur*3+2];
+            data[cur*4+3] = 255;
+            */
+
+            kmVec3 cn = getNor(normalMap, cur);
+            kmVec3 ln = getNor(normalMap, left);
+            kmVec3 rn = getNor(normalMap, right);
+            kmVec3 un = getNor(normalMap, up);
+            kmVec3 dn = getNor(normalMap, down);
+            //printf("\n\n");
+        
+            float diff1 = kmVec3Dot(&cn, &ln);
+            float diff2 = kmVec3Dot(&cn, &rn);
+            float diff3 = kmVec3Dot(&cn, &un);
+            float diff4 = kmVec3Dot(&cn, &dn);
+            
+            //printf(" %f %f %f %f", diff1, diff2, diff3, diff4);
+
+            //printVec3(cn);
+            //printVec3(un);
+            
+            if(diff1 < 0 || diff2 < 0 || diff3 < 0 || diff4 < 0) {
+                data[cur*4+0] = 255; 
+                data[cur*4+1] = 255; 
+                data[cur*4+2] = 255; 
+                data[cur*4+3] = 255; 
+            }
+
+
+            /*
+            printf("%f ", diff3);
+                data[cur*4+0] = 255*diff3; 
+                data[cur*4+1] = 255*diff3; 
+                data[cur*4+2] = 255*diff3; 
+                data[cur*4+3] = 255; 
+            */
+
+        }
+        //printf("\n");
     }
 }

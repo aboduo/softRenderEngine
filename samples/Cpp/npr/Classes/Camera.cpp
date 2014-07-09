@@ -9,6 +9,9 @@
 
 using namespace std;
 
+static void printVec3(kmVec3 p) {
+    CCLog("%f %f %f", p.x, p.y, p.z);
+}
 
 static void printMat(kmMat4 *mat) {
     /*
@@ -30,7 +33,13 @@ height(h)
     depth = (float*)malloc(width*height*sizeof(float));
     lightDepthBuffer = (float*)malloc(width*height*sizeof(float));
     lightBuffer = (unsigned char*)malloc(width*height*sizeof(unsigned char));
-    normalMap = (float*)malloc(width*height*sizeof(float));
+
+    //encode normal information of each pixel
+    normalMap = (unsigned char*)malloc(width*height*sizeof(unsigned char)*3);
+    
+    //渲染 外部轮廓线在 这个buffer中
+    //rgba
+    outlineData = (unsigned char*)malloc(width*height*sizeof(unsigned char)*4);
 
     memset(depth, 0, width*height*sizeof(float));
     
@@ -38,7 +47,8 @@ height(h)
     //bool loadSuc = image->initWithImageFile("testPlane2.png");
     //bool loadSuc = image->initWithImageFile("smooth.png");
 
-    bool loadSuc = image->initWithImageFile("cubeMap.png");
+    //bool loadSuc = image->initWithImageFile("cubeMap.png");
+    bool loadSuc = image->initWithImageFile("crease.png");
     //CCLog("load image suc %d", loadSuc);
 
     texture = image->getData();
@@ -936,11 +946,25 @@ void Camera::renderFaceWithLight(CCSprite *sp, Mesh *m, unsigned char *data, flo
 }
 
 
+//利用DepthBuffer 中的信息
+//比较相邻像素 如果 深度插值 > xxx 则 表示可以渲染outline了
+void Camera::renderOutLine(unsigned char *data) {
+    drawOutline(data, depth, outlineData, width, height);
+    //将outline 数据写入到data中 模糊采样一下
+}
+
+
+void Camera::renderCrease(unsigned char *data) {
+    drawCrease(data, normalMap, width, height);
+}
+
+
+
 /*
 采用类似光照强度的算法进行渲染
 方向光照 lightDir  -1 -1 -1 
 */
-void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, float diff) {
+void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, float diff, OverLay *overLay) {
     vector<kmVec4> npos;
     vector<kmVec3> nnormal;
     //每个顶点的diffuse 值
@@ -996,6 +1020,8 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
     li.calculateEdge();
 
 
+    vector<kmVec3> worldPos;
+
     //Model matrix
     for(int i=0;i < m->vertices.size(); i++) {
         kmVec4 out;
@@ -1006,6 +1032,8 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
         kmVec4 out2;
         kmVec4Transform(&out2, &temp, &allMat);
         npos.push_back(out2);
+
+
     
         //世界坐标重新计算normal light 位置不变
         kmVec3 nn;
@@ -1013,8 +1041,9 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
         kmVec3Normalize(&nn, &nn);
         nnormal.push_back(nn);
 
-        //kmVec3 worldPosition;
-        //kmVec3Transform(&worldPosition, &vt, &matrixModel);
+        kmVec3 worldPosition;
+        kmVec3Transform(&worldPosition, &vt, &matrixModel);
+        worldPos.push_back(worldPosition);
         
         //diff = 
         //kmVec3 tempRes;
@@ -1031,6 +1060,8 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
         //CCLog("color is %f", cosTheta);
         //color.push_back(cosTheta);
     }
+
+    overLay->initLabel(npos, m->triangles);
 
     NormalMap nm;
 
@@ -1064,6 +1095,22 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
         float cpy = npos[c].y;
         float cpz = npos[c].z;
         float cw = npos[c].w;
+
+
+        kmVec3 wa = worldPos[a];
+        kmVec3 wb = worldPos[b];
+        kmVec3 wc = worldPos[c];
+        kmVec3 out1, out2, out3;
+        kmVec3Subtract(&out1, &wb, &wa);
+        kmVec3Subtract(&out2, &wc, &wa);
+        kmVec3Cross(&out3, &out1, &out2);
+        kmVec3Normalize(&out3, &out3);
+
+        CCLog("normal is");
+        printVec3(wa);
+        printVec3(wb);
+        printVec3(wc);
+        printVec3(out3);
     
         //CCLog("a b c %f %f %f  %f %f %f  %f %f %f", apx, apy, aw, bpx, bpy, bw, cpx, cpy, cw);
         //根据 zbuffer数据 更新depth数据
@@ -1086,7 +1133,7 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
         PosTexNor pt3 = {p3, m->textureCoord[c], nnormal[c] };
 
         //drawFaceNPR(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize,  pt1, pt2, pt3 );
-        drawFaceNPRPerPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir,  pt1, pt2, pt3 );
+        drawFaceNPRPerPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir,  pt1, pt2, pt3, normalMap, out3);
     }
 
     nm.calculateEdge();

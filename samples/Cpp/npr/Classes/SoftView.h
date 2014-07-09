@@ -4,6 +4,8 @@
 #include "cocos2d.h"
 #include "Mesh.h"
 #include "Camera.h"
+#include "OverLay.h"
+
 using namespace cocos2d;
 class SoftView : public CCLayer {
 public:
@@ -21,6 +23,8 @@ public:
     virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
     */
 private:
+    OverLay *overLay;
+
     bool stop;
     CCSprite *sp, *sp1;
     //CCTexture2D *tex;

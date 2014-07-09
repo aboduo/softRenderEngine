@@ -3,6 +3,7 @@
 #include "kazmath/vec3.h"
 #include "cocos2d.h"
 #include "Mesh.h"
+#include "OverLay.h"
 
 using namespace cocos2d;
 class Camera {
@@ -21,7 +22,7 @@ public:
 
     void renderFaceWithTexture(CCSprite *, Mesh *m, unsigned char *data, float diff);
 
-    void renderFaceTextureNPR(CCSprite *, Mesh *m, unsigned char *data, float diff);
+    void renderFaceTextureNPR(CCSprite *, Mesh *m, unsigned char *data, float diff, OverLay *overLay);
 
 
     //从光源渲染对象 到深度缓冲区
@@ -38,6 +39,27 @@ public:
     void showLightDepth(CCSprite *sp);
 
 
+    void renderOutLine(unsigned char *data);
+
+    //direction
+    void initNormal() {
+        for(int i = 0; i < width; i++) {
+            for(int j = 0; j < height; j++) {
+                int nid = (j*width+i)*3;
+                normalMap[nid+0] = 128;
+                normalMap[nid+1] = 128;
+                normalMap[nid+2] = 128;
+            }
+        }
+        //memset(normalMap, 0, width*height*3);
+    }
+
+    void renderCrease(unsigned char *data);
+
+    void initOutLine() {
+        memset(outlineData, 255, width*height*4);
+    }
+
 
     void update(float diff);
 
@@ -49,13 +71,16 @@ public:
         free(lightDepthBuffer);
         free(lightBuffer);
         free(normalMap);
+        free(outlineData);
     }
 private:
     //从光源方向的深度缓冲区
     float *lightDepthBuffer;
 
     unsigned char *lightBuffer;
-    float *normalMap;
+    unsigned char *normalMap;
+
+    unsigned char *outlineData;
     
 
     //顶点有个问题 没有办法得到每个像素点的最终深度值 无法进行比较了

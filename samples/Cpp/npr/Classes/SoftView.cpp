@@ -17,13 +17,23 @@ bool SoftView::init(){
 
     renderYet = false;
 
+    width = 125;
+    height = 125;
+
     m = new Mesh();
     //m->loadFile("testPlane.babylon");
     
     //m->loadFile("smooth.babylon");
-    m->loadFile("renderCube.babylon");
+    //m->loadFile("renderCube.babylon");
+    m->loadFile("testCrease.babylon");
 
     kmVec3Fill(&m->position, 0, 0, 0);
+
+    kmQuaternion rx;
+    kmVec3 axis;
+    kmVec3Fill(&axis, 1, 0, 0);
+    //kmQuaternionRotationAxis(&m->rotation, &axis, 3.14/3);
+
     kmQuaternionIdentity(&m->rotation); 
 
 
@@ -86,12 +96,10 @@ bool SoftView::init(){
 
     
 
-    width = 100;
-    height = 100;
 
     cam = new Camera(width, height);
     //左下角作为 0 0 点
-    kmVec3Fill(&cam->position, 0, 2, 2);
+    kmVec3Fill(&cam->position, 0, -1, 2);
 
 
     sp = CCSprite::create();
@@ -99,6 +107,12 @@ bool SoftView::init(){
 
     sp1 = CCSprite::create();
     addChild(sp1);
+
+    overLay = OverLay::create();
+    overLay->width = width;
+    overLay->height = height;
+    addChild(overLay);
+
 
 
     CCSize fs = CCDirector::sharedDirector()->getVisibleSize();
@@ -195,18 +209,63 @@ void SoftView::update(float v){
         cam->renderShadow(sp, m, data);
         cam->swapBuffer(sp, data);
         */
-
+        
+        /*
         m->update(v);
 
         cam->initBuffer(data);
+        //清理normalMap
+        cam->initNormal();
+
         cam->renderFaceTextureNPR(sp, m, data, v);
+
+        cam->initOutLine();
+        //将outline的信息写入到 data中覆盖即可
+        cam->renderOutLine(data);
+        cam->renderCrease(data);
+
+
         cam->swapBuffer(sp, data);
 
         cam->renderLine(sp1, m, data1, v); 
+        */
     }
 
     if(!renderYet) {
         renderYet = true;
+
+        
+        cam->initBuffer(data);
+        //清理normalMap
+        cam->initNormal();
+
+        cam->renderFaceTextureNPR(sp, m, data, v, overLay);
+
+        cam->initOutLine();
+        //将outline的信息写入到 data中覆盖即可
+        cam->renderOutLine(data);
+        cam->renderCrease(data);
+
+
+        cam->swapBuffer(sp, data);
+
+        //cam->renderFaceWithTexture(sp, m, data, v);
+        cam->renderLine(sp1, m, data1, v); 
+        //cam->render(sp, m, data, v);
+
+
+        /*
+        cam->initBuffer(data);
+        cam->renderFaceTextureNPR(sp, m, data, v);
+
+        cam->initOutLine();
+        //将outline的信息写入到 data中覆盖即可
+        cam->renderOutLine(data);
+
+        cam->swapBuffer(sp, data);
+
+        cam->renderLine(sp1, m, data1, v); 
+        */
 
         /*
         cam->initBuffer(data);
