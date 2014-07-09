@@ -1,5 +1,7 @@
 #include "util.h"
 #include <vector>
+#include "kazmath/quaternion.h"
+
 
 using namespace cocos2d;
 
@@ -15,7 +17,10 @@ static void printMat(kmMat4 *mat) {
 }
 
 void printVec3(kmVec3 p) {
-    //CCLog("%f %f %f", p.x, p.y, p.z);
+    CCLog("%f %f %f", p.x, p.y, p.z);
+}
+void printQuaternion(kmQuaternion q) {
+    CCLog("%f %f %f %f", q.x, q.y, q.z, q.w);
 }
 int color[][3] = {
     {255, 0, 0},
@@ -35,8 +40,12 @@ int color[][3] = {
 };
 
 void putpixel(unsigned char *data, int width , int height, int x, int y, int col) {
-    x = std::max(std::min(width-1, x), 0);
-    y = std::max(std::min(height-1, y), 0);
+    if(x < 0 || x >= width || y < 0 || y > height-1)
+        return;
+
+    //x = std::max(std::min(width-1, x), 0);
+    //y = std::max(std::min(height-1, y), 0);
+
     int id = y*width+x;
     int r, g, b;
     r = g = b = 0;
@@ -1080,8 +1089,57 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
     //float ds = interpolate(pa.diff, pb.diff, gradient1);
     //float de = interpolate(pc.diff, pd.diff, gradient2);
 
+    //旋转插值 一个方向插值到另外一个方向
+    //slerp interpolate vector direction
+    //pa pb  插值normal  nor1
+    //pc pd 插值 normal  nor2
+
+    //start identity ---> nor1  gradient1  == normal
+    CCLog("normal");
+    printVec3(pa.normal);
+    printVec3(pb.normal);
+
+    kmVec3 fallback = {0, 1, 0};
+    kmQuaternion norRot1, norRot2;
+    kmQuaternionRotationBetweenVec3(&norRot1, &pa.normal, &pb.normal, &fallback);
+    kmQuaternionRotationBetweenVec3(&norRot2, &pc.normal, &pd.normal, &fallback);
+    
+    printQuaternion(norRot1);
+    printQuaternion(norRot2);
+
+    kmQuaternion startRot;
+    kmQuaternionIdentity(&startRot);
+
+    //startRot ---> gradient1  norRot1
+    kmQuaternion norA, norB;
+    //rotation for pa.normal  pc.normal
+    kmQuaternionSlerp(&norA, &startRot, &norRot1, gradient1);
+    kmQuaternionSlerp(&norB, &startRot, &norRot2, gradient2);
+    
+    kmVec3 normalStart;
+    kmQuaternionMultiplyVec3(&normalStart, &norA, &pa.normal);
+    kmVec3 normalEnd;
+    kmQuaternionMultiplyVec3(&normalEnd, &norB, &pc.normal);
+
+    CCLog("start normal");
+    printVec3(normalStart);
+    printVec3(normalEnd);
+    
+    //
+    kmQuaternion diffSE;
+    kmQuaternionRotationBetweenVec3(&diffSE, &normalStart, &normalEnd, &fallback);
+    printQuaternion(diffSE);
+    //normalStart ---> rotate ---> diffSE
+    //从normalStart 到 normalEnd 所在横行的 normal插值
+
+
+    /*
     kmVec3 ns = interpolateVec3(pa.normal, pb.normal, gradient1);
+    kmVec3Normalize(&ns, &ns);
+
     kmVec3 ne = interpolateVec3(pc.normal, pd.normal, gradient1);
+    kmVec3Normalize(&ne, &ne);
+    */
 
     ////CCLog("line is %d %d %d", y, sx, st);
     ////CCLog("tex coord %f %f %f %f", texXS, texXE, texYS, texYE);
@@ -1090,6 +1148,7 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
     int minX = std::min(std::max(0, sx), width-1);
     int maxX = std::min(std::max(0, st), width);
 
+    CCLog("x normal");
     for(int x=minX; x < maxX; x++) {
         float gradientZ = (float)(x-sx)/(st-sx);
         float newDepth = interpolate(zx, ze, gradientZ);
@@ -1114,36 +1173,73 @@ static void processScanTextureNPRPixel(unsigned char *data, float *depth, unsign
             int g = texture[tid*4+1];
             int b = texture[tid*4+2];
             int a = texture[tid*4+3];
+            
+            //interpolate from identity to target 
+            kmQuaternion normalRot;
+            kmQuaternionSlerp(&normalRot, &startRot, &diffSE, gradientZ);
+            
+            //how to get normal rotation ?direction?
+            kmVec3 normal;
+            kmQuaternionMultiplyVec3(&normal, &normalRot, &normalStart);
+            printVec3(normal);
+            kmVec3Normalize(&normal, &normal);
+            //printVec3(normal);
 
+            /*
             kmVec3 normal = interpolateVec3(ns, ne, gradientZ);
             kmVec3Normalize(&normal, &normal);
+            */
+            
+            //lightDir normal 
             float diff = kmVec3Dot(&lightDir, &normal);
-            diff = std::max(0.0f, diff);
+            //printVec3(lightDir);
+            printf("%f ", diff);
+            //diff = std::max(0.0f, diff);
+            //diff = (diff+0.3f)/1.4f;
             
             //float diff = interpolate(ds, de, gradientZ);
             
             int difX = (int)std::max(std::min(diff*nprSize.width, nprSize.width-1.0f), 0.0f);
             int difY = (int)std::max(std::min(diff*nprSize.height, nprSize.height-1.0f), 0.0f);
 
-            float difR = nprShade[difX*4+0]/255.0f;
-            float difG = nprShade[difX*4+1]/255.0f;
-            float difB = nprShade[difX*4+2]/255.0f;
-            float difA = nprShade[difX*4+3]/255.0f;
+            int difftid = difY*nprSize.width+difX;
+
+            float difR = nprShade[difftid*4+0]/255.0f;
+            float difG = nprShade[difftid*4+1]/255.0f;
+            float difB = nprShade[difftid*4+2]/255.0f;
+            float difA = nprShade[difftid*4+3]/255.0f;
         
             r = r*difR;
             g = g*difG;
             b = b*difB;
+            
 
             ////CCLog("rgba %d %d %d %d", r, g, b, a);
 
             //putpixelWithColor(data, width, height, x, y, 255, 255, 255, 255);
+            
             putpixelWithColor(data, width, height, x, y, r,  g, b, a);
+
+            
+            //test Normal direction
+            //-1 1 normal 值
+            
+            /*
+            float red = (normal.x+1)/2.0f;
+            float green = (normal.y+1)/2.0f;
+            float blue = (normal.z+1)/2.0f;
+
+            putpixelWithColor(data, width, height, x, y, red*200,  green*200, blue*200, 255);
+            */
+            
         }
     }
+    printf("\n");
 }
 
 //每个像素插值 normal 同时 计算和光线方向lightDir 的diff值
 void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *texture, int width, int height, int imgWidth, int imgHeight, unsigned char *nprShade, CCSize nprSize, kmVec3 lightDir, PosTexNor p1,  PosTexNor p2, PosTexNor p3){
+    CCLog("drawFaceNPRPerPixel");
 
     p1.tex.y = 1-p1.tex.y;
     p2.tex.y = 1-p2.tex.y;
@@ -1185,8 +1281,10 @@ void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *textu
     int minY = std::min(std::max(0, (int)p1.p.y), height-1);
     int maxY = std::min(std::max(0, (int)p3.p.y), height-1);
     
+    int count = 0;
     if(right || (!left && dP1P2 > dP1P3)) {
-        for(int y=minY; y <= maxY; y++) {
+        for(int y=minY; y <= maxY  ; y++) {
+            count++;
             if(y < p2.p.y) {
                 processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p1, p3, p1, p2);
             }else {
@@ -1195,7 +1293,8 @@ void drawFaceNPRPerPixel(unsigned char *data, float *depth, unsigned char *textu
         }
     } else {
         //p2 on left
-        for(int y=minY; y <= maxY; y++) {
+        for(int y=minY; y <= maxY  ; y++) {
+            count++;
             if(y < p2.p.y) {
                 processScanTextureNPRPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir, y, p1, p2, p1, p3);
             }else {

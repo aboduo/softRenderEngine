@@ -48,12 +48,14 @@ public:
         free(depth);
         free(lightDepthBuffer);
         free(lightBuffer);
+        free(normalMap);
     }
 private:
     //从光源方向的深度缓冲区
     float *lightDepthBuffer;
 
     unsigned char *lightBuffer;
+    float *normalMap;
     
 
     //顶点有个问题 没有办法得到每个像素点的最终深度值 无法进行比较了

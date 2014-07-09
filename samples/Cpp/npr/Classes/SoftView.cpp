@@ -19,7 +19,9 @@ bool SoftView::init(){
 
     m = new Mesh();
     //m->loadFile("testPlane.babylon");
-    m->loadFile("smooth.babylon");
+    
+    //m->loadFile("smooth.babylon");
+    m->loadFile("renderCube.babylon");
 
     kmVec3Fill(&m->position, 0, 0, 0);
     kmQuaternionIdentity(&m->rotation); 
@@ -194,6 +196,7 @@ void SoftView::update(float v){
         cam->swapBuffer(sp, data);
         */
 
+        /*
         m->update(v);
 
         cam->initBuffer(data);
@@ -201,10 +204,19 @@ void SoftView::update(float v){
         cam->swapBuffer(sp, data);
 
         cam->renderLine(sp1, m, data1, v); 
+        */
     }
 
     if(!renderYet) {
         renderYet = true;
+
+
+        cam->initBuffer(data);
+        cam->renderFaceTextureNPR(sp, m, data, v);
+        cam->swapBuffer(sp, data);
+
+        cam->renderLine(sp1, m, data1, v); 
+
 
         /*
         cam->initBuffer(data);

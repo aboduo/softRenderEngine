@@ -3,6 +3,8 @@
 #include "kazmath/vec4.h"
 #include "kazmath/quaternion.h"
 #include "util.h"
+#include "Light.h"
+#include "NormalMap.h"
 
 
 using namespace std;
@@ -28,12 +30,15 @@ height(h)
     depth = (float*)malloc(width*height*sizeof(float));
     lightDepthBuffer = (float*)malloc(width*height*sizeof(float));
     lightBuffer = (unsigned char*)malloc(width*height*sizeof(unsigned char));
+    normalMap = (float*)malloc(width*height*sizeof(float));
 
     memset(depth, 0, width*height*sizeof(float));
     
     image = new CCImage();
     //bool loadSuc = image->initWithImageFile("testPlane2.png");
-    bool loadSuc = image->initWithImageFile("smooth.png");
+    //bool loadSuc = image->initWithImageFile("smooth.png");
+
+    bool loadSuc = image->initWithImageFile("cubeMap.png");
     //CCLog("load image suc %d", loadSuc);
 
     texture = image->getData();
@@ -42,7 +47,8 @@ height(h)
 
 
     CCImage *im2 = new CCImage();
-    im2->initWithImageFile("64shade.png");
+    //im2->initWithImageFile("64shade.png");
+    im2->initWithImageFile("shade.png");
     nprShade = im2->getData();
     nprSize = CCSizeMake(im2->getWidth(), im2->getHeight());
 
@@ -974,11 +980,21 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
     kmMat4Multiply(&allMat, &matrixPers, &tempMat);
     printMat(&allMat);
 
+
+    kmMat4 lightViewMat;
+    kmMat4Multiply(&lightViewMat, &matrixPers, &matrixLookup);
+
     
     //要和normal 同方向
-    kmVec3 tempDir = {1, 1, 1};
+    kmVec3 tempDir = {0.5, 1, 0.5};
     kmVec3 lightDir;
     kmVec3Normalize(&lightDir, &tempDir);
+
+    Light li;
+    kmVec3Fill(&li.position, 0.5, 0.5, 0.5);
+    kmVec3Fill(&li.direction, 0.5, 1, 0.5);
+    li.calculateEdge();
+
 
     //Model matrix
     for(int i=0;i < m->vertices.size(); i++) {
@@ -1016,6 +1032,8 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
         //color.push_back(cosTheta);
     }
 
+    NormalMap nm;
+
 
     // texture value  color 
     for(int i=0; i < m->triangles.size(); i++) {
@@ -1023,6 +1041,14 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
         int b = m->triangles[i].b;
         int c = m->triangles[i].c;
         
+        nm.centerPos.push_back(npos[a]);
+        nm.centerPos.push_back(npos[b]);
+        nm.centerPos.push_back(npos[c]);
+
+        nm.normalMap.push_back(nnormal[a]);
+        nm.normalMap.push_back(nnormal[b]);
+        nm.normalMap.push_back(nnormal[c]);
+
         //CCLog("aa %d %d %d", a, b, c);
         float apx = npos[a].x;
         float apy = npos[a].y;
@@ -1063,6 +1089,52 @@ void Camera::renderFaceTextureNPR(CCSprite *sp, Mesh *m, unsigned char *data, fl
         drawFaceNPRPerPixel(data, depth, texture, width, height, imgWidth, imgHeight, nprShade, nprSize, lightDir,  pt1, pt2, pt3 );
     }
 
+    nm.calculateEdge();
+    
+
+    vector<kmVec4> lightVer;
+    for(int i = 0; i < li.vertices.size(); i++) {
+        kmVec4 out;
+        kmVec4 temp;
+        kmVec3 vt = li.vertices[i];
+        kmVec4Fill(&temp, vt.x, vt.y, vt.z, 1);
+
+        kmVec4 out2;
+        kmVec4Transform(&out2, &temp, &lightViewMat);
+        lightVer.push_back(out2);
+    }
+
+    for(int i=0; i < li.edges.size(); i++) {
+        int a = li.edges[i].a;
+        int b = li.edges[i].b;
+        
+        float apx = lightVer[a].x;
+        float apy = lightVer[a].y;
+        float aw = lightVer[a].w;
+
+        float bpx = lightVer[b].x;
+        float bpy = lightVer[b].y;
+        float bw = lightVer[b].w;
+        
+        drawLine(data, width, height, apx/aw*cx+cx, apy/aw*cy+cy, bpx/bw*cx+cx, bpy/bw*cy+cy, i);
+    }
+
+    
+    for(int i=0; i< nm.edges.size(); i++) {
+        int a = nm.edges[i].a;
+        int b = nm.edges[i].b;
+        
+        float apx = nm.vertices[a].x;
+        float apy = nm.vertices[a].y;
+        float aw = nm.vertices[a].w;
+
+        float bpx = nm.vertices[b].x;
+        float bpy = nm.vertices[b].y;
+        float bw = nm.vertices[b].w;
+        
+        drawLine(data, width, height, apx/aw*cx+cx, apy/aw*cy+cy, bpx/bw*cx+cx, bpy/bw*cy+cy, i);
+    }
+    //li.render();
 }
 
 void Camera::renderFaceWithTexture(CCSprite *sp, Mesh *m, unsigned char *data, float diff) {
